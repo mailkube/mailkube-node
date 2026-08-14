@@ -41,6 +41,15 @@ describe("Config", () => {
     );
   });
 
+  it("reports a bare version in the user agent, never a `v`-prefixed tag", () => {
+    // The contract's row is `mailkube-<lang>/<version>`. The assertion above cannot catch a stray
+    // prefix, because both sides would carry it; this one can. The version is derived from
+    // `package.json`, not from the `v${version}` git tag, and must stay that way.
+    const agent = new Config({ apiKey: "mk_test" }).defaultHeaders()["User-Agent"] ?? "";
+
+    expect(agent).toMatch(/^mailkube-node\/\d/);
+  });
+
   it("joins a relative path onto the base URL", () => {
     expect(new Config({ apiKey: "mk_test" }).buildUrl("emails")).toBe(`${DEFAULT_BASE_URL}emails`);
   });

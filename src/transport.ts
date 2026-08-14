@@ -9,7 +9,7 @@
  * interface; it never widens an existing one.
  */
 import type { Config } from "./config.js";
-import { ConnectionError, apiErrorFor } from "./errors.js";
+import { ConnectionError, MailkubeError, apiErrorFor } from "./errors.js";
 import { redactHeaders, type Logger } from "./logging.js";
 import { decodeEmail, type Decoder, type Email } from "./types/index.js";
 import { record, text } from "./types/decode.js";
@@ -99,7 +99,17 @@ export class HttpTransport implements SendTransport, TypedTransport {
     const response = await this.#roundTrip(spec);
     const payload = await decode(response);
     if (!response.ok) {
-      throw errorFor(response, payload);
+      // A failure's body is best-effort by nature — a gateway can answer HTML — so an
+      // undecodable one still maps to the API error the status describes.
+      throw errorFor(response, payload ?? {});
+    }
+    if (payload === undefined) {
+      // A success whose body is not a JSON object is an SDK-level failure, not an API error.
+      // Decoding it anyway would fabricate a model out of defaults and hand the caller an
+      // `id: ""` that never existed.
+      throw new MailkubeError(
+        `Expected a JSON object in the ${String(response.status)} response body.`,
+      );
     }
     return { payload, headers: response.headers };
   }
@@ -177,18 +187,27 @@ function errorFor(response: Response, payload: unknown): Error {
 }
 
 /**
- * Best-effort JSON decode; returns an empty object for an empty or undecodable body.
+ * Decode the body to a JSON object, or report that it is not one.
+ *
+ * An empty body reads as an empty object: `204`-style acknowledgements are legitimate, and their
+ * models are built entirely from defaults. Anything else that is not a JSON **object** — a bare
+ * string, an array, a gateway's HTML error page — is `undefined`, so the caller can tell "nothing
+ * to read" apart from "the wrong thing to read" instead of silently decoding both as empty.
  * @param response - The response to read.
- * @returns The decoded body.
+ * @returns The decoded body, or undefined when it is not a JSON object.
  */
-async function decode(response: Response): Promise<unknown> {
+async function decode(response: Response): Promise<Record<string, unknown> | undefined> {
   const raw = await response.text();
   if (raw === "") {
     return {};
   }
+  let value: unknown;
   try {
-    return JSON.parse(raw) as unknown;
+    value = JSON.parse(raw);
   } catch {
-    return {};
+    return undefined;
   }
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
 }

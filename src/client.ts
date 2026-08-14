@@ -2,6 +2,7 @@
  * The API client, and this package's composition root.
  */
 import { Config, type ClientOptions } from "./config.js";
+import { MailkubeError } from "./errors.js";
 import { resolveLogger } from "./logging.js";
 import { EmailsResource } from "./resources/emails.js";
 import { ScheduledEmailsResource } from "./resources/scheduled-emails.js";
@@ -45,10 +46,32 @@ export class Mailkube {
     const config = new Config(options);
     const transport = new HttpTransport(
       config,
-      options.fetch ?? globalThis.fetch,
+      resolveFetch(options.fetch),
       resolveLogger(options.logger),
     );
     this.emails = new EmailsResource(transport);
     this.scheduledEmails = new ScheduledEmailsResource(transport);
   }
+}
+
+/**
+ * Pick the fetch implementation, refusing a runtime that has none.
+ *
+ * Without this the absence surfaces much later as a bare `TypeError: fetch is not a function`
+ * raised from inside the transport — a foreign error type, mapped to `ConnectionError` as though
+ * the network had failed, naming neither the cause nor the fix.
+ * @param explicit - The fetch passed to the client, if any.
+ * @returns The fetch implementation to drive.
+ * @throws {MailkubeError} When no fetch is available and none was injected.
+ */
+function resolveFetch(explicit?: typeof globalThis.fetch): typeof globalThis.fetch {
+  const candidate: unknown = explicit ?? globalThis.fetch;
+  if (typeof candidate !== "function") {
+    throw new MailkubeError(
+      "No fetch implementation is available. This SDK requires Node 20.3 or later " +
+        "(`nvm install 20`), a Worker, Deno or Bun runtime — or pass your own: " +
+        "new Mailkube({ fetch }).",
+    );
+  }
+  return candidate as typeof globalThis.fetch;
 }

@@ -38,6 +38,13 @@ export const ErrorName = {
   NotAcceptable: "not_acceptable",
   QuotaExceeded: "quota_exceeded",
   RateLimitExceeded: "rate_limit_exceeded",
+  ScheduledEmailNotFound: "scheduled_email_not_found",
+  ScheduledEmailNotPending: "scheduled_email_not_pending",
+  SchedulingNotIncluded: "scheduling_not_included",
+  TemplateNotFound: "template_not_found",
+  TemplateNotPublished: "template_not_published",
+  TopicDisabled: "topic_disabled",
+  TopicNotFound: "topic_not_found",
   UnsupportedMediaType: "unsupported_media_type",
   ValidationError: "validation_error",
 } as const;
