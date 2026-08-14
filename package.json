@@ -1,5 +1,5 @@
 {
-  "name": "mailkube",
+  "name": "@mailkube/mailkube-node",
   "version": "0.0.0",
   "description": "Mailkube Node.js SDK",
   "type": "module",

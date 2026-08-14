@@ -9,7 +9,7 @@ export default tseslint.config(
   // duplication gate in .jscpd.json, and from coverage in vitest.config.ts. This mirrors the
   // python template's `extend-exclude = ["examples"]`.
   // `smoke/` is the same kind of artifact one step further out: those scripts run against the
-  // PACKED TARBALL under other runtimes, so they resolve "mailkube" (not `../src`), are outside the
+  // PACKED TARBALL under other runtimes, so they resolve "@mailkube/mailkube-node" (not `../src`), are outside the
   // TS program, and would fail type-aware linting rather than be linted by it.
   {
     ignores: [

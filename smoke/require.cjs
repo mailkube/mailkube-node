@@ -10,8 +10,8 @@
 // The shared checks are ESM, so they arrive through a dynamic `import()` — which is exactly how a
 // CJS consumer would reach any ESM helper, and proves the two module systems interoperate here.
 
-const sdk = require("mailkube");
-const manifest = require("mailkube/package.json");
+const sdk = require("@mailkube/mailkube-node");
+const manifest = require("@mailkube/mailkube-node/package.json");
 
 import("./checks.mjs")
   .then(({ runChecks }) => runChecks(sdk, manifest.version))

@@ -4,7 +4,7 @@
  * The public surface. Named exports only, so the API is explicit and tree-shakeable.
  *
  * ```ts
- * import { Mailkube } from "mailkube";
+ * import { Mailkube } from "@mailkube/mailkube-node";
  *
  * const client = new Mailkube();
  * const email = await client.emails.send({
