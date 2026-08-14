@@ -34,6 +34,11 @@ export default tseslint.config(
     },
     rules: {
       complexity: ["error", 10], // KISS (#3)
+      // `flat/recommended-typescript` turns off require-param-type, require-returns-type and
+      // require-property-type — the type is in the signature — but leaves require-yields-type on.
+      // A generator's yield type is in the signature too (`AsyncGenerator<ScheduledEmail>`), so
+      // this restores the preset's own rule rather than relaxing it.
+      "jsdoc/require-yields-type": "off",
       "jsdoc/require-jsdoc": [
         "error",
         {
