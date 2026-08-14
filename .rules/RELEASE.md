@@ -16,9 +16,9 @@ Load this when touching `release.yml`, `.releaserc.json`, versioning, or npm pub
    what the `User-Agent` reports.
    The `version` field committed to this repo is a permanent `0.0.0` placeholder. A checkout
    therefore reports `0.0.0` and an install from the registry reports the real version: **that is
-   intended.** Do not "fix" it by hardcoding a number, and do not add a second constant — a
-   hand-maintained literal is how the pilot SDK spent 1.0.0 through 1.2.0 reporting itself as
-   `0.1.0`.
+   intended.** Do not "fix" it by hardcoding a number, and do not add a second constant: a literal
+   alongside the manifest lets the two drift, and the `User-Agent` then reports a version that was
+   never released.
 4. **Publishing is OIDC-only.** The `release` job publishes to npm with **provenance** using GitHub's
    OIDC token via npm **trusted publishing** — **no `NPM_TOKEN` is stored anywhere** (`id-token: write`
    + `NPM_CONFIG_PROVENANCE=true`).

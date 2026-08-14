@@ -15,8 +15,8 @@ thresholds and how to satisfy each gate locally *before* pushing.
 | **Strict typing** | no `tsc --strict` errors | `tsc --noEmit` (the `test` CI job) |
 | **Formatting** | prettier-clean | `prettier --check .` (the `test` CI job) |
 
-Coverage is **line and branch** at 90% — full parity with the python template (vitest's v8 provider
-measures both natively).
+Coverage is **line and branch** at 90%, the same threshold every mailkube SDK holds to. vitest's v8
+provider measures both natively.
 
 ## Run the gates locally
 

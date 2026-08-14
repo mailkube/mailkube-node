@@ -3,17 +3,14 @@
 Load this when adding a **resource, verb, response model, paginated listing, or webhook event**,
 or when wiring a framework integration to the mailkube API.
 
-This file is **language-neutral**: it describes decisions every mailkube SDK makes the same way, so
-a caller who learns one knows them all. It began as a copy of the constitution in `repo-template`,
-but **this repo owns its copy outright** — there is no sync and no drift check. Edit it here when
-this SDK's understanding of the API changes, and port anything worth sharing to the sibling SDKs by
-hand.
+This file is **language-neutral and shared**. Every mailkube SDK carries an identical copy, so all
+of them describe one API the same way. It is maintained centrally and changes land in every SDK
+together: open an issue rather than editing this copy, which would only drift.
 
 The *structure* below must survive translation into any language. Where a language genuinely
 demands a different shape (no keyword arguments, no structural typing, no async), the deviation is
-allowed but must be **recorded in `SDK_DESIGN.md`**, which is where the TypeScript-specific
-realization lives. Keeping the two files separate is still worth it even without the sync: it keeps
-"what the API guarantees" legible apart from "how TypeScript expresses it".
+allowed but must be **recorded in that SDK's own `.rules/SDK_DESIGN.md`**, which is where the
+language-specific realization lives.
 
 ## Configuration
 
@@ -34,9 +31,8 @@ Identical in every SDK. A caller who learns one SDK knows them all.
 as the source is the language's own convention: installed package metadata where the manifest owns
 the version (Python, Node, Go, PHP), or a version constant that the manifest itself reads where that
 is the idiom (Ruby's `lib/<gem>/version.rb`). What is forbidden is a **second** copy that release
-tooling can bump independently. This is not hypothetical: the Python SDK reported
-`mailkube-python/0.1.0` for releases 1.0.0 through 1.2.0 because the source carried a literal
-alongside the manifest.
+tooling can bump independently. A literal alongside the manifest lets the two drift, and the
+User-Agent then reports a version that was never released.
 
 Where the metadata route can legitimately return nothing — a package running from a build tree
 rather than an installed artifact, which is the normal case in tests and IDEs — fall back to a
@@ -70,8 +66,6 @@ applies and record the outcome in that SDK's own `.rules/SDK_DESIGN.md`:
 - **Sync only**, where concurrency is the caller's concern rather than an API-surface decision, or
   where async would mean depending on something outside the language's standard interfaces. Give the
   caller the control they need instead: a per-call cancellation or deadline handle.
-
-Current realizations: Python ships both; Node is async only; Go and PHP are sync only.
 
 **Shipping one client is not the same as being single-threaded.** Where the flavour is sync only
 because concurrency is the caller's concern, the SDK is making a promise about what the caller may

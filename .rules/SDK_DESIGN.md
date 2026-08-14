@@ -5,8 +5,8 @@ response model, paginated listing, or webhook event**.
 
 `SDK_CONTRACT.md` is the language-neutral constitution: configuration, layering, naming,
 response-model rules, pagination, the error model, and the webhook contract, all of which every
-mailkube SDK implements identically. This repo owns its copy — it is not synced from anywhere and
-nothing checks it for drift, so edit it here when the API's guarantees change.
+mailkube SDK implements identically. Every mailkube SDK carries an identical copy of it, maintained
+centrally so that changes land in all of them together.
 
 **This file covers only what is specific to TypeScript.** A deliberate deviation from the
 contract belongs here rather than in the contract, so the contract keeps describing the API
