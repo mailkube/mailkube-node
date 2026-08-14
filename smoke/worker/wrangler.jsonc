@@ -1,0 +1,11 @@
+{
+    // Cloudflare Workers smoke target.
+    //
+    // `compatibility_flags` is deliberately ABSENT, and that absence is the load-bearing part of this
+    // whole file: adding "nodejs_compat" would polyfill `process`, `Buffer` and `node:crypto` back
+    // into scope, and the job would then pass against exactly the package that cannot run on a plain
+    // Worker. Do not add it to "make the smoke job green".
+    "name": "mailkube-smoke",
+    "main": "worker.mjs",
+    "compatibility_date": "2025-01-01",
+}

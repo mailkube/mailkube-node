@@ -1,0 +1,7 @@
+dist
+coverage
+node_modules
+
+# Prettier owns TS/JS/JSON formatting; prose docs (Markdown) are out of scope, matching the
+# python template where ruff formats only code. Governance docs live under common/ anyway.
+*.md

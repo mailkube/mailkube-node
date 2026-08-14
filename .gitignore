@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Written from package.json by scripts/generate-version.mjs at build (and install) time, so the
+# published artifact carries the version semantic-release resolved. Generated, never committed.
+src/version.generated.ts
+
+# Coverage
+coverage/
+
+# `npm pack` output — the packaging and smoke gates build one locally
+*.tgz
+
+# Tooling caches
+.eslintcache
+.jscpd/
+
+# Secrets / local config
+.env

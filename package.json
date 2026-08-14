@@ -1,0 +1,81 @@
+{
+  "name": "mailkube",
+  "version": "0.0.0",
+  "description": "Mailkube Node.js SDK",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Mailtactic, Corp.",
+  "homepage": "https://github.com/mailkube/mailkube-node#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mailkube/mailkube-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mailkube/mailkube-node/issues"
+  },
+  "keywords": [
+    "mailkube",
+    "email",
+    "smtp",
+    "transactional-email",
+    "webhooks",
+    "sdk"
+  ],
+  "engines": {
+    "node": ">=20.3"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node scripts/generate-version.mjs && tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run --coverage",
+    "prepare": "node scripts/generate-version.mjs",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/node": "^22.7.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "eslint": "^9.13.0",
+    "eslint-plugin-jsdoc": "^50.4.0",
+    "eslint-plugin-sonarjs": "^3.0.0",
+    "prettier": "^3.3.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.10.0",
+    "vitest": "^2.1.0"
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": false,
+    "trailingComma": "all",
+    "printWidth": 100
+  }
+}

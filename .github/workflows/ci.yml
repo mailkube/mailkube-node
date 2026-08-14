@@ -1,0 +1,196 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call: # so release.yml can gate on the full CI
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint (eslint — complexity, docs, SOLID smells, type-checked)
+        run: npm run lint
+
+      - name: Format check (prettier)
+        run: npm run format:check
+
+      - name: Type check (tsc)
+        run: npm run typecheck
+
+      - name: Tests + coverage (vitest, 90% line+branch)
+        run: npm test
+
+  pack:
+    # Build the tarball once; every runtime job below installs THIS artifact, so the matrix tests
+    # what a consumer installs rather than what the source tree happens to compile to.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm install
+      - name: Pack (runs prepack → generate-version + tsup)
+        run: |
+          npm pack
+          mv mailkube-*.tgz mailkube.tgz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tarball
+          path: mailkube.tgz
+          retention-days: 1
+
+  package:
+    # Does the published shape resolve? publint checks the manifest, attw checks that BOTH the
+    # ESM and CJS entries type-resolve — the failure mode that would break n8n and Node-RED.
+    needs: pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball
+      - name: publint
+        run: npx --yes publint@0.3 mailkube.tgz
+      - name: Are the types wrong?
+        run: npx --yes @arethetypeswrong/cli@0.18 mailkube.tgz
+
+  version-bake:
+    # The published artifact must report the version it was published as. Nothing else catches a
+    # build that runs BEFORE @semantic-release/npm rewrites package.json: the tree's own version is
+    # a permanent 0.0.0 placeholder, so "not 0.0.0" would be the wrong assertion — this asserts
+    # equality against a version only this job knows.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm install
+      - name: Pack at a synthetic version and assert it is baked in
+        run: |
+          npm version --no-git-tag-version 9.9.9-bake
+          npm pack
+          mkdir -p /tmp/bake && mv mailkube-*.tgz /tmp/bake/pkg.tgz
+          cd /tmp/bake && npm init -y >/dev/null && npm install ./pkg.tgz
+          node -e '
+            const { version } = require("mailkube");
+            const expected = require("mailkube/package.json").version;
+            if (version !== expected) {
+              throw new Error(`reported ${version}, installed ${expected}`);
+            }
+            console.log(`baked version ${version}`);
+          '
+
+  smoke:
+    # Every target runtime, against the packed tarball, importing the BARE specifier "mailkube".
+    # Never `npm:mailkube`: in Deno that is a registry fetch (404 before the first publish, and the
+    # published package rather than this build afterwards), and Bun has no such specifier.
+    needs: pack
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime: node20
+            node: "20"
+          - runtime: node22
+            node: "22"
+          - runtime: node24
+            node: "24"
+          - runtime: deno
+            node: "22"
+          - runtime: bun
+            node: "22"
+          - runtime: workerd
+            node: "22"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: denoland/setup-deno@v2
+        if: matrix.runtime == 'deno'
+        with:
+          deno-version: v2.x
+      - uses: oven-sh/setup-bun@v2
+        if: matrix.runtime == 'bun'
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball
+
+      - name: Install the tarball into a scratch project
+        run: |
+          mkdir -p /tmp/smoke && cp -r smoke /tmp/smoke/smoke && cp mailkube.tgz /tmp/smoke/
+          cd /tmp/smoke && npm init -y >/dev/null && npm install ./mailkube.tgz
+
+      - name: Node (ESM + CommonJS)
+        if: startsWith(matrix.runtime, 'node')
+        working-directory: /tmp/smoke
+        run: |
+          node smoke/run.mjs
+          node smoke/require.cjs
+
+      - name: Deno (env access denied)
+        if: matrix.runtime == 'deno'
+        working-directory: /tmp/smoke
+        # --deny-env is load-bearing: Deno DEFINES globalThis.process, so an unguarded env read
+        # throws NotCapable rather than falling through to undefined.
+        run: deno run --deny-env --allow-read --allow-net --node-modules-dir=manual smoke/run.mjs
+
+      - name: Bun
+        if: matrix.runtime == 'bun'
+        working-directory: /tmp/smoke
+        run: bun smoke/run.mjs
+
+      - name: Cloudflare Workers (no nodejs_compat)
+        if: matrix.runtime == 'workerd'
+        working-directory: /tmp/smoke
+        # The strictest target: no process, no Buffer, no node: modules, no createRequire.
+        run: |
+          npm install --save-dev wrangler@4
+          node smoke/worker/drive.mjs
+
+  dry:
+    # Language-agnostic duplication (DRY) gate — identical across every mailkube repo.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+      - name: Copy-paste detection (jscpd)
+        run: npx --yes jscpd@4 --config .jscpd.json .
+
+  docs:
+    # Governance gate: every .rules/*.md must be indexed in AGENTS.md.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Rule-index sync check
+        run: ./scripts/check-rule-index.sh

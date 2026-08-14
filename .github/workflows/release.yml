@@ -1,0 +1,60 @@
+name: Release
+
+# Conventional-Commits-driven release: one tag + one GitHub Release, then publish to npm.
+# NOTHING is committed back to `main`; see .rules/RELEASE.md. Publishing uses npm OIDC trusted publishing (no long-lived token) with
+# build provenance; see .rules/RELEASE.md for the one-time trusted-publisher setup.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci-gate:
+    # Release only proceeds if the full gated CI (test + dry + docs) is green.
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write # push the tag, create the GitHub Release
+      issues: write
+      pull-requests: write
+      id-token: write # npm OIDC trusted publishing + provenance — no token stored
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      # Trusted publishing requires npm >= 11.5.1 AND Node >= 22.14.0. Bumping node-version alone
+      # is not enough: the npm bundled with a Node release lags well behind that floor, so without
+      # this step the publish fails with ENONPMTOKEN even though OIDC is configured correctly.
+      - name: Install an npm new enough for trusted publishing
+        run: npm install -g npm@^11.5.1
+
+      - name: Install dependencies
+        run: npm install
+
+      # Pre-flight only. The artifact that actually ships is built by `prepack`, which npm runs
+      # AFTER @semantic-release/npm has written the resolved version into package.json — that
+      # ordering is what makes the published bundle report its real version rather than 0.0.0.
+      - name: Build (pre-flight; prepack rebuilds at publish time)
+        run: npm run build
+
+      # `@semantic-release/npm` writes the version into package.json in this runner and packs
+      # it; `@semantic-release/git` is deliberately absent, so nothing is committed back.
+      - name: Release (semantic-release → tag, GitHub Release, npm publish via OIDC)
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
