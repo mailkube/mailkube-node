@@ -1,8 +1,11 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
+  # No `push: branches: [main]` trigger on purpose. release.yml already runs this entire workflow
+  # through `workflow_call` on every push to `main`, and both runs land in the same
+  # `ci-${{ github.ref }}` concurrency group with cancel-in-progress. A direct trigger therefore
+  # only ever races the gated one: one of the two is cancelled, and the cancelled run is what the
+  # README's CI badge reports. `main` stays fully covered by release.yml's ci-gate job.
   pull_request:
   workflow_call: # so release.yml can gate on the full CI
 
@@ -99,8 +102,8 @@ jobs:
           mkdir -p /tmp/bake && mv mailkube-*.tgz /tmp/bake/pkg.tgz
           cd /tmp/bake && npm init -y >/dev/null && npm install ./pkg.tgz
           node -e '
-            const { version } = require("mailkube");
-            const expected = require("mailkube/package.json").version;
+            const { version } = require("@mailkube/mailkube-node");
+            const expected = require("@mailkube/mailkube-node/package.json").version;
             if (version !== expected) {
               throw new Error(`reported ${version}, installed ${expected}`);
             }
@@ -108,8 +111,8 @@ jobs:
           '
 
   smoke:
-    # Every target runtime, against the packed tarball, importing the BARE specifier "mailkube".
-    # Never `npm:mailkube`: in Deno that is a registry fetch (404 before the first publish, and the
+    # Every target runtime, against the packed tarball, importing the BARE specifier "@mailkube/mailkube-node".
+    # Never `npm:@mailkube/mailkube-node`: in Deno that is a registry fetch (404 before the first publish, and the
     # published package rather than this build afterwards), and Bun has no such specifier.
     needs: pack
     runs-on: ubuntu-latest

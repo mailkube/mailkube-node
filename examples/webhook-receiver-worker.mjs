@@ -9,7 +9,7 @@
 // through `env` rather than from an ambient environment, and the raw bytes come from
 // `request.arrayBuffer()`.
 
-import { verify, SignatureVerificationError } from "mailkube";
+import { verify, SignatureVerificationError } from "@mailkube/mailkube-node";
 
 export default {
   async fetch(request, env) {

@@ -1,7 +1,7 @@
 # Project Rules
 
 `mailkube-node` is a public (Apache-2.0) mailkube SDK published to npm
-as `mailkube`. Load the relevant rule file from `.rules/` based on the task.
+as `@mailkube/mailkube-node`. Load the relevant rule file from `.rules/` based on the task.
 
 ## Rule Index
 

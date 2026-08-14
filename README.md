@@ -1,8 +1,8 @@
 # mailkube-node
 
 [![CI](https://github.com/mailkube/mailkube-node/actions/workflows/ci.yml/badge.svg)](https://github.com/mailkube/mailkube-node/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/mailkube)](https://www.npmjs.com/package/mailkube)
-[![Node](https://img.shields.io/node/v/mailkube)](package.json)
+[![npm](https://img.shields.io/npm/v/%40mailkube%2Fmailkube-node)](https://www.npmjs.com/package/@mailkube/mailkube-node)
+[![Node](https://img.shields.io/node/v/%40mailkube%2Fmailkube-node)](package.json)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Code of Conduct](https://img.shields.io/badge/Contributor%20Covenant-2.1-purple.svg)](CODE_OF_CONDUCT.md)
 
@@ -11,13 +11,13 @@ Mailkube Node.js SDK
 ## Install
 
 ```bash
-npm install mailkube
+npm install @mailkube/mailkube-node
 ```
 
 ## Usage
 
 ```ts
-import { Mailkube } from "mailkube";
+import { Mailkube } from "@mailkube/mailkube-node";
 
 const client = new Mailkube(); // reads MAILKUBE_API_KEY
 
@@ -85,7 +85,7 @@ throw an `ApiError` subclass chosen by status (`BadRequestError`, `Authenticatio
 carrying `errorName`, `message`, `statusCode`, `retryAfter` and `requestId`.
 
 ```ts
-import { ErrorName, RateLimitError } from "mailkube";
+import { ErrorName, RateLimitError } from "@mailkube/mailkube-node";
 
 try {
   await client.emails.send({ ... });
@@ -184,7 +184,7 @@ re-serialize, or the signature will not match. It accepts bytes as well as text,
 what a real handler holds.
 
 ```ts
-import { verify } from "mailkube";
+import { verify } from "@mailkube/mailkube-node";
 
 app.post("/webhooks/mailkube", express.raw({ type: "application/json" }), async (req, res) => {
   const event = await verify(req.body, req.headers, process.env.MAILKUBE_WEBHOOK_SECRET);
@@ -240,7 +240,7 @@ Two guarantees for receivers, both so an older SDK never breaks on a newer platf
 Silent by default. Pass a logger, or turn it on process-wide:
 
 ```ts
-import { enableLogging } from "mailkube";
+import { enableLogging } from "@mailkube/mailkube-node";
 
 const client = new Mailkube({ logger: { debug: (message, fields) => pino.debug(fields, message) } });
 
@@ -259,12 +259,12 @@ on every runtime below before anything is published.
 
 | Runtime | Notes |
 |---|---|
-| **Node 20.3+** | ESM and CommonJS both resolve. `require("mailkube")` works. |
+| **Node 20.3+** | ESM and CommonJS both resolve. `require("@mailkube/mailkube-node")` works. |
 | **Cloudflare Workers** | No `nodejs_compat` needed. Build the client per request from the `env` binding. |
 | **AWS Lambda / GCP Cloud Functions** | Plain Node. Hoist the client to module scope so it is reused across invocations. |
-| **Deno** | `import { Mailkube } from "npm:mailkube"`. |
-| **Bun** | `bun add mailkube`. |
-| **n8n / Node-RED** | CommonJS: `const { Mailkube } = require("mailkube");` |
+| **Deno** | `import { Mailkube } from "npm:@mailkube/mailkube-node"`. |
+| **Bun** | `bun add @mailkube/mailkube-node`. |
+| **n8n / Node-RED** | CommonJS: `const { Mailkube } = require("@mailkube/mailkube-node");` |
 
 Cloudflare Workers, where the key arrives per request rather than from an ambient environment:
 

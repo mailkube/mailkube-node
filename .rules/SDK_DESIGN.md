@@ -169,10 +169,10 @@ answered.
 first Worker or Deno consumer to install the package.
 
 So the smoke scripts run against the **packed tarball** installed into a scratch project, importing
-the bare specifier `"mailkube"`, on Node 20/22/24 (ESM *and* CommonJS), Cloudflare Workers without
+the bare specifier `"@mailkube/mailkube-node"`, on Node 20/22/24 (ESM *and* CommonJS), Cloudflare Workers without
 `nodejs_compat`, Deno under `--deny-env`, and Bun. Rules worth keeping:
 
-- **Never `npm:mailkube`.** In Deno that is a registry fetch: the job would 404 before the first
+- **Never `npm:@mailkube/mailkube-node`.** In Deno that is a registry fetch: the job would 404 before the first
   publish and then test the *published* package rather than the build in hand. Bun has no such
   specifier at all.
 - **`--deny-env` on Deno is load-bearing.** Deno defines `globalThis.process`, so an unguarded read

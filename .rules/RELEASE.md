@@ -75,7 +75,7 @@ are the changelog**; there is no `CHANGELOG.md` in this repo.
   required because `prepack` builds. **Never commit that version bump.** Then push an annotated
   `v<version>` tag on `main`, or semantic-release will see no prior release and jump straight to
   `1.0.0` on the next `feat:`.
-- Configure the npm **Trusted Publisher** for `mailkube`
+- Configure the npm **Trusted Publisher** for `@mailkube/mailkube-node`
   (npmjs.com → package → Settings → Trusted Publishing) pointing at this GitHub org/repo and
   `release.yml`.
 - Fallback: if trusted publishing is not yet available, add an `NPM_TOKEN` secret and pass it to the

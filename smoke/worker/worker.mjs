@@ -11,7 +11,7 @@
 
 import { runChecks } from "../checks.mjs";
 
-import * as sdk from "mailkube";
+import * as sdk from "@mailkube/mailkube-node";
 
 export default {
   /**

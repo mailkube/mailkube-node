@@ -17,7 +17,7 @@ import { createTestHarness } from "wrangler";
 
 const require = createRequire(import.meta.url);
 const installed = JSON.parse(
-  readFileSync(require.resolve("mailkube/package.json"), "utf8"),
+  readFileSync(require.resolve("@mailkube/mailkube-node/package.json"), "utf8"),
 ).version;
 
 const harness = createTestHarness({
