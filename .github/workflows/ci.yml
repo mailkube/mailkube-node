@@ -81,6 +81,13 @@ jobs:
         run: npx --yes publint@0.3 mailkube.tgz
       - name: Are the types wrong?
         run: npx --yes @arethetypeswrong/cli@0.18 mailkube.tgz
+      # Publish-readiness: the registry's own manifest checks (name, scope, access, required
+      # fields), which publint and attw do not run. `--dry-run` sends nothing.
+      # `--tag` is required, not cosmetic: CI packs the tree's permanent `0.0.0` placeholder
+      # (see .rules/RELEASE.md), and npm refuses to imply `latest` for a version below the
+      # published one. The tag is never created — nothing is published.
+      - name: Publish readiness (npm publish --dry-run)
+        run: npm publish mailkube.tgz --access public --tag ci-dry-run --dry-run
 
   version-bake:
     # The published artifact must report the version it was published as. Nothing else catches a

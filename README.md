@@ -96,6 +96,10 @@ try {
 }
 ```
 
+`requestId` is the server's own identifier for the failed call, read from the `X-Request-Id`
+response header. Log it, and quote it when you report a failure to support: it is what lets the
+request be found on our side.
+
 ### Threading
 
 Echo the `messageId` of an earlier send in `In-Reply-To` and `References` to thread replies:

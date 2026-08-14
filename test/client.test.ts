@@ -231,3 +231,74 @@ describe("error mapping", () => {
     expect(error).not.toBeInstanceOf(ApiError);
   });
 });
+
+describe("malformed 2xx bodies", () => {
+  // A success whose body is not a JSON object must surface as an SDK error. Decoding it anyway
+  // fabricates a model out of the readers' defaults and hands the caller identifiers that never
+  // existed — the worst possible failure, because nothing throws until much later.
+  it.each([
+    ["a bare string", '"just text"'],
+    ["an array", "[1, 2, 3]"],
+    ["a gateway's HTML", "<html>ok?</html>"],
+    ["a JSON null", "null"],
+  ])("rejects a 200 whose body is %s", async (_label, body) => {
+    const { client } = makeClient({ body });
+
+    const error: unknown = await client.emails.send(MINIMAL).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(MailkubeError);
+    expect(error).not.toBeInstanceOf(ApiError);
+  });
+
+  it("rejects on the generic decode path too, not only on send", async () => {
+    // `cancel` decodes through readers that all have defaults, so nothing downstream would have
+    // complained: this is exactly the path that would have invented an empty model.
+    const { client } = makeClient({ body: "[1, 2, 3]" });
+
+    await expect(client.scheduledEmails.cancel("sch_1")).rejects.toBeInstanceOf(MailkubeError);
+  });
+
+  it("still accepts an empty body, which is a legitimate acknowledgement", async () => {
+    const { client } = makeClient({ body: "" });
+
+    await expect(client.scheduledEmails.batches.cancel("batch-1")).resolves.toMatchObject({
+      canceledCount: 0,
+    });
+  });
+});
+
+describe("client construction", () => {
+  it("applies the configured timeout to the request, not merely to the config object", async () => {
+    // Guards against the timeout going dead: it is read from `Config` and must reach `fetch` as a
+    // signal. If it stops doing so, the stub below never settles and this test fails.
+    let observed: AbortSignal | null | undefined;
+    const client = new Mailkube({
+      apiKey: "mk_test",
+      timeoutMs: 5,
+      fetch: (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          observed = init?.signal;
+          init?.signal?.addEventListener("abort", () => {
+            reject(new Error("aborted"));
+          });
+        }),
+    });
+
+    await expect(client.emails.send(MINIMAL)).rejects.toBeInstanceOf(ConnectionError);
+    expect(observed?.aborted).toBe(true);
+  });
+
+  it("names the fix when the runtime has no fetch at all", () => {
+    // Without the guard this surfaces far later as a bare TypeError from inside the transport,
+    // mapped to ConnectionError as though the network had failed.
+    const original = Object.getOwnPropertyDescriptor(globalThis, "fetch");
+    Reflect.deleteProperty(globalThis, "fetch");
+    try {
+      expect(() => new Mailkube({ apiKey: "mk_test" })).toThrow(MailkubeError);
+      expect(() => new Mailkube({ apiKey: "mk_test" })).toThrow(/No fetch implementation/);
+    } finally {
+      if (original) {
+        Object.defineProperty(globalThis, "fetch", original);
+      }
+    }
+  });
+});
