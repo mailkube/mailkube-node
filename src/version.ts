@@ -12,8 +12,8 @@
  * behaviour, not a bug to fix by hardcoding a number.
  *
  * A second, hand-maintained constant is precisely how a package ends up reporting a version it is
- * not: the pilot SDK pinned `0.1.0` in source while releases went out as `1.0.0` through `1.2.0`,
- * so every request's `User-Agent` misattributed the client. Do not reintroduce one.
+ * not: a literal alongside the manifest lets the two drift, and every request's `User-Agent` then
+ * reports a version that was never released. Do not reintroduce one.
  *
  * The generated module is git-ignored, and `prepare` regenerates it on `npm install`, so a fresh
  * clone can typecheck before it has ever built.

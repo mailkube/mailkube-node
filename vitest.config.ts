@@ -6,7 +6,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       include: ["src/**/*.ts"],
-      // Line + branch parity with the python template — vitest enforces these natively (#1).
+      // Line and branch are gated together; vitest's v8 provider measures both natively (#1).
       thresholds: {
         lines: 90,
         branches: 90,

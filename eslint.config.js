@@ -4,7 +4,8 @@ import sonarjs from "eslint-plugin-sonarjs";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  // commitlint.config.js is a CommonJS tool config synced from common/ (not part of the ESM source).
+  // commitlint.config.js is a CommonJS tool config shared verbatim across every mailkube SDK
+  // (not part of the ESM source).
   // Examples are runnable documentation, not shipped code: excluded from lint here, from the
   // duplication gate in .jscpd.json, and from coverage in vitest.config.ts. This mirrors the
   // python template's `extend-exclude = ["examples"]`.
@@ -58,7 +59,8 @@ export default tseslint.config(
     extends: [tseslint.configs.disableTypeChecked],
   },
   {
-    // Tests relax docs + complexity (mirrors the python template's tests/* ignores).
+    // Tests relax docs + complexity: a test's name is its documentation, and table-driven cases
+    // are repetitive by nature.
     files: ["test/**", "**/*.test.ts"],
     rules: {
       "jsdoc/require-jsdoc": "off",
