@@ -10,7 +10,7 @@
 //
 // Nothing here sends a message: each call is designed to be refused.
 
-import { Mailkube, MailkubeError, RateLimitError, AuthenticationError } from "../dist/index.js";
+import { Mailkube, MailkubeError, AuthenticationError } from "../dist/index.js";
 
 const recipient = process.argv[2];
 if (!recipient) {
@@ -60,7 +60,13 @@ await expect("past scheduledAt", "validation_error", () =>
 
 // batchId is a grouping label for scheduled sends and means nothing without scheduledAt.
 await expect("batchId without scheduledAt", "validation_error", () =>
-  client.emails.send({ from: sender, to: recipient, subject: "Ungrouped", text: "...", batchId: "b1" }),
+  client.emails.send({
+    from: sender,
+    to: recipient,
+    subject: "Ungrouped",
+    text: "...",
+    batchId: "b1",
+  }),
 );
 
 // A sent email has left the scheduled collection, so filtering for it is a contract error rather
@@ -72,13 +78,17 @@ await expect('list status "sent"', "validation_error", () =>
 // A bad key is refused identically whether it is malformed, unknown or absent, so nothing about
 // the key space leaks.
 await expect("bad api key", "invalid_api_key", () => {
-  const anonymous = new Mailkube({ apiKey: "mk_notarealkey_0000000000000000000000000000000000000000000000000000000000" });
+  const anonymous = new Mailkube({
+    apiKey: "mk_notarealkey_0000000000000000000000000000000000000000000000000000000000",
+  });
   return anonymous.emails.send({ from: sender, to: recipient, subject: "Nope", text: "..." });
 });
 
 // Worth knowing these exist even when they do not fire here: a 429 carries the server's own
 // Retry-After, and authentication failures are their own class.
-console.log(`(RateLimitError carries .retryAfter; AuthenticationError is ${AuthenticationError.name})`);
+console.log(
+  `(RateLimitError carries .retryAfter; AuthenticationError is ${AuthenticationError.name})`,
+);
 
 if (failures > 0) {
   console.error(`${failures} case(s) did not behave as documented`);

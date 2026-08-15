@@ -8,7 +8,8 @@ thresholds and how to satisfy each gate locally *before* pushing.
 | Gate | Rule | Enforced by |
 |---|---|---|
 | **Coverage** | ≥ 90% **line and branch** | vitest v8 `coverage.thresholds` (the `test` CI job) |
-| **DRY** | ≤ 1% duplicated code | `jscpd` (the `dry` CI job) |
+| **DRY** | ≤ 1% duplicated code | `jscpd` (the `dry` CI job) — `src/` at `minTokens: 50`, `examples/` at 100 |
+| **Examples parse** | every `examples/*.mjs` is valid JavaScript | `node --check` (the `examples` CI job) |
 | **KISS** | cyclomatic ≤ 10 + cognitive complexity | eslint `complexity` + `sonarjs` (the `test` CI job) |
 | **Documentation** | every exported symbol has JSDoc | eslint `jsdoc/require-jsdoc` (publicOnly) |
 | **SOLID** | see below — approximated by lint + review | `@typescript-eslint` type-checked + `sonarjs` + PR checklist |
@@ -26,10 +27,23 @@ npm run format:check    # prettier formatting
 npm run typecheck       # tsc --noEmit, strict
 npm test                # vitest + 90% line+branch coverage gate
 npx --yes jscpd@4 --config .jscpd.json .   # duplication (DRY) gate
+npx --yes jscpd@4 --config .jscpd.examples.json examples/  # the same gate over examples/
+for f in examples/*.mjs; do node --check "$f" || exit 1; done  # every example parses
 ./scripts/check-rule-index.sh              # every .rules/*.md indexed in AGENTS.md
 ```
 
 `pre-commit run --all-files` runs the prettier + eslint + jscpd + commitlint hooks in one shot.
+
+**`examples/` is in scope for ESLint.** It is runnable documentation, which is the reason, not an
+exception to it: customers copy those files, and every defect the SDK certification run surfaced
+lived there because no gate looked at it. Two carve-outs remain, each for a reason:
+
+- **Duplication** is measured by a *separate* pass, `.jscpd.examples.json`, at `minTokens: 100`
+  instead of 50. Every example repeats the same opening — import, read `MAILKUBE_FROM`, construct
+  the client — and hoisting that into a shared helper would make each file unreadable on its own,
+  which is the one thing an example must be. 100 clears that scaffolding (measured: the cliff is
+  at 90) and still fails on a copy-pasted example.
+- **Coverage** excludes them, because nothing in CI executes them: they need live credentials.
 
 ## SOLID, concretely (paradigm-neutral guidance)
 

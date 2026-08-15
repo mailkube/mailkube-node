@@ -28,7 +28,7 @@ for (const path of paths) {
   const rawBody = Buffer.from(fixture.body, "utf8");
 
   let verified = false;
-  let detail = "";
+  let detail;
   try {
     const event = await verify(rawBody, fixture.headers, fixture.secret);
     verified = true;

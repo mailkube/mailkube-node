@@ -48,7 +48,9 @@ const replay = await client.emails.send(params);
 console.log(`replayed  : ${replay.id}`);
 
 if (first.id !== replay.id) {
-  console.error(`expected the same id back, got ${first.id} then ${replay.id} — that is a second send`);
+  console.error(
+    `expected the same id back, got ${first.id} then ${replay.id} — that is a second send`,
+  );
   process.exit(1);
 }
 console.log("same id returned: the retry was replayed, not resent");
@@ -60,7 +62,9 @@ try {
   process.exit(1);
 } catch (error) {
   if (error instanceof MailkubeError) {
-    console.log(`key reuse with a changed body correctly rejected: ${error.errorName ?? error.name}`);
+    console.log(
+      `key reuse with a changed body correctly rejected: ${error.errorName ?? error.name}`,
+    );
   } else {
     throw error;
   }

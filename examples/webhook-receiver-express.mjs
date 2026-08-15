@@ -20,6 +20,8 @@ if (!secret) {
 }
 
 const app = express();
+// Do not advertise the framework and its version to every caller.
+app.disable("x-powered-by");
 
 app.post(
   "/webhooks/mailkube",

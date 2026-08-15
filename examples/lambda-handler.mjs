@@ -15,7 +15,10 @@ const sender = process.env.MAILKUBE_FROM ?? "Acme <hello@yourdomain.com>";
 const client = new Mailkube();
 
 /**
- * @param {{ to: string, subject: string, html: string, requestId?: string }} event
+ * Send one email per invocation.
+ * @param {{ to: string, subject: string, html: string, requestId?: string }} event - the
+ *   invocation payload; `requestId`, when present, becomes the idempotency key.
+ * @returns {Promise<{ statusCode: number, body: string }>} an API Gateway proxy response.
  */
 export const handler = async (event) => {
   try {

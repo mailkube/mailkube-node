@@ -52,7 +52,10 @@ await pace();
 // Every page, lazily. Only scheduled/canceled/failed can be listed: a sent email has left the
 // collection, so status "sent" is a validation error, not an empty result.
 let first;
-for await (const item of client.scheduledEmails.iterAll({ status: ["scheduled", "canceled"], batchId })) {
+for await (const item of client.scheduledEmails.iterAll({
+  status: ["scheduled", "canceled"],
+  batchId,
+})) {
   first ??= item;
   console.log(`${item.id}  ${item.status.padEnd(9)}  ${item.scheduledAt}  ${item.recipients}`);
 }
