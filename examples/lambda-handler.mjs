@@ -8,6 +8,10 @@
 
 import { Mailkube, RateLimitError } from "../dist/index.js";
 
+// The verified sender this account may send from. Override per environment; the
+// fallback is a placeholder and will be rejected until you set your own domain.
+const sender = process.env.MAILKUBE_FROM ?? "Acme <hello@yourdomain.com>";
+
 const client = new Mailkube();
 
 /**
@@ -16,7 +20,7 @@ const client = new Mailkube();
 export const handler = async (event) => {
   try {
     const email = await client.emails.send({
-      from: "Acme <hello@yourdomain.com>",
+      from: sender,
       to: event.to,
       subject: event.subject,
       html: event.html,
