@@ -15,12 +15,16 @@ if (!recipient) {
   process.exit(2);
 }
 
+// The verified sender this account may send from. Override per environment; the
+// fallback is a placeholder and will be rejected until you set your own domain.
+const sender = process.env.MAILKUBE_FROM ?? "Acme <hello@yourdomain.com>";
+
 const client = new Mailkube();
 
 const inAnHour = new Date(Date.now() + 60 * 60 * 1000);
 
 const email = await client.emails.send({
-  from: "Acme <hello@yourdomain.com>",
+  from: sender,
   to: recipient,
   subject: "Scheduled hello",
   html: "<p>Sent later, on purpose.</p>",

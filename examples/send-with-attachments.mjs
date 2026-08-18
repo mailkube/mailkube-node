@@ -17,13 +17,17 @@ if (!recipient) {
   process.exit(2);
 }
 
+// The verified sender this account may send from. Override per environment; the
+// fallback is a placeholder and will be rejected until you set your own domain.
+const sender = process.env.MAILKUBE_FROM ?? "Acme <hello@yourdomain.com>";
+
 const client = new Mailkube();
 
 // Any Uint8Array will do; a Buffer from node:fs is one.
 const report = new Uint8Array(await readFile(new URL("../package.json", import.meta.url)));
 
 const email = await client.emails.send({
-  from: "Acme <hello@yourdomain.com>",
+  from: sender,
   to: recipient,
   subject: "Your report",
   text: "The report is attached.",

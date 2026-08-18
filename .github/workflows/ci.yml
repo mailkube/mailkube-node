@@ -186,6 +186,27 @@ jobs:
           npm install --save-dev wrangler@4
           node smoke/worker/drive.mjs
 
+  examples:
+    # `examples/` is runnable documentation, and customers copy it. Nothing in CI executes it —
+    # that would need live credentials — so this is the floor: every example must at least parse.
+    # ESLint (in `test`) covers style, complexity and SOLID smells; this catches what a linter
+    # cannot, a file that is not valid JavaScript at all.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+      - name: Examples parse (node --check)
+        # One file per invocation, deliberately: `node --check a.mjs b.mjs` checks only the FIRST
+        # argument and exits 0, so the glob form would be a green no-op. `|| exit 1` is the other
+        # half — a bare `for … done` reports only the last iteration's status. The count assertion
+        # catches a glob that matched nothing.
+        run: |
+          n=$(ls examples/*.mjs | wc -l)
+          test "$n" -ge 15 || { echo "expected >=15 examples, found $n"; exit 1; }
+          for f in examples/*.mjs; do node --check "$f" || exit 1; done
+
   dry:
     # Language-agnostic duplication (DRY) gate — identical across every mailkube repo.
     runs-on: ubuntu-latest
@@ -196,6 +217,13 @@ jobs:
           node-version: "20"
       - name: Copy-paste detection (jscpd)
         run: npx --yes jscpd@4 --config .jscpd.json .
+      # Examples are excluded from the run above and measured here instead, at a higher
+      # minTokens. Every example repeats the same scaffolding — import, read MAILKUBE_FROM,
+      # construct the client — and deduping that into a shared helper would defeat the point of a
+      # file you can read top to bottom and paste into your own project. 100 tokens is past that
+      # boilerplate (the cliff is at 90) while still catching a genuinely copy-pasted example.
+      - name: Copy-paste detection across examples (jscpd)
+        run: npx --yes jscpd@4 --config .jscpd.examples.json examples/
 
   docs:
     # Governance gate: every .rules/*.md must be indexed in AGENTS.md.

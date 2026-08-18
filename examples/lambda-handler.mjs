@@ -8,15 +8,22 @@
 
 import { Mailkube, RateLimitError } from "../dist/index.js";
 
+// The verified sender this account may send from. Override per environment; the
+// fallback is a placeholder and will be rejected until you set your own domain.
+const sender = process.env.MAILKUBE_FROM ?? "Acme <hello@yourdomain.com>";
+
 const client = new Mailkube();
 
 /**
- * @param {{ to: string, subject: string, html: string, requestId?: string }} event
+ * Send one email per invocation.
+ * @param {{ to: string, subject: string, html: string, requestId?: string }} event - the
+ *   invocation payload; `requestId`, when present, becomes the idempotency key.
+ * @returns {Promise<{ statusCode: number, body: string }>} an API Gateway proxy response.
  */
 export const handler = async (event) => {
   try {
     const email = await client.emails.send({
-      from: "Acme <hello@yourdomain.com>",
+      from: sender,
       to: event.to,
       subject: event.subject,
       html: event.html,

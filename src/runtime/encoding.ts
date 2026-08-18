@@ -97,3 +97,16 @@ export function decodeHex(hex: string): Uint8Array | undefined {
   }
   return bytes;
 }
+
+/**
+ * Hex-encode bytes, lowercase.
+ * @param bytes - The bytes to encode.
+ * @returns The hex text, two characters per byte.
+ */
+export function encodeHex(bytes: Uint8Array): string {
+  let hex = "";
+  for (const byte of bytes) {
+    hex += byte.toString(16).padStart(2, "0");
+  }
+  return hex;
+}

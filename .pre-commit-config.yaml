@@ -18,12 +18,19 @@ repos:
         entry: npx prettier --write
         language: system
         types_or: [ts, javascript, json, yaml, markdown]
+      # `types_or`, not `types: [ts]` — the examples are `.mjs`, and a TypeScript-only matcher
+      # meant this hook never fired for them even though eslint now covers the directory.
       - id: eslint
         name: eslint
         entry: npx eslint --fix
         language: system
-        types: [ts]
+        types_or: [ts, javascript]
         pass_filenames: false
+      - id: examples-parse
+        name: examples parse (node --check)
+        entry: node --check
+        language: system
+        files: ^examples/.*\.mjs$
 
   # Language-agnostic DRY gate — identical config in every mailkube repo.
   - repo: local
@@ -31,6 +38,11 @@ repos:
       - id: jscpd
         name: jscpd (copy-paste detector)
         entry: npx --yes jscpd@4 --config .jscpd.json .
+        language: system
+        pass_filenames: false
+      - id: jscpd-examples
+        name: jscpd (examples, higher threshold)
+        entry: npx --yes jscpd@4 --config .jscpd.examples.json examples/
         language: system
         pass_filenames: false
 

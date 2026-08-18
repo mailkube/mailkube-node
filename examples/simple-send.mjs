@@ -19,11 +19,15 @@ if (!recipient) {
   process.exit(2);
 }
 
+// The verified sender this account may send from. Override per environment; the
+// fallback is a placeholder and will be rejected until you set your own domain.
+const sender = process.env.MAILKUBE_FROM ?? "Acme <hello@yourdomain.com>";
+
 const client = new Mailkube(); // reads MAILKUBE_API_KEY
 
 try {
   const email = await client.emails.send({
-    from: "Acme <hello@yourdomain.com>",
+    from: sender,
     to: recipient,
     subject: "Hello from mailkube-node",
     html: "<p>It works!</p>",

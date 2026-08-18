@@ -15,7 +15,7 @@
  * ("Compare in constant time") exists to prevent, on a signature check that is the entire security
  * boundary of webhook delivery.
  */
-import { encodeUtf8 } from "./encoding.js";
+import { encodeHex, encodeUtf8 } from "./encoding.js";
 
 const ALGORITHM = { name: "HMAC", hash: "SHA-256" } as const;
 
@@ -52,4 +52,18 @@ export async function verifyHmacSha256(
   const key = await crypto.subtle.importKey("raw", encodeUtf8(secret), ALGORITHM, false, ["sign"]);
   const expected = new Uint8Array(await crypto.subtle.sign(ALGORITHM.name, key, message));
   return timingSafeEqual(expected, signature);
+}
+
+/**
+ * Produce an HMAC-SHA256 signature over a message, hex-encoded.
+ *
+ * The mirror of {@link verifyHmacSha256}, so the two cannot drift: verification is tested against
+ * signatures this function produced.
+ * @param secret - The signing secret, used verbatim as UTF-8 bytes.
+ * @param message - The exact bytes to sign.
+ * @returns The signature as lowercase hex.
+ */
+export async function signHmacSha256(secret: string, message: Uint8Array): Promise<string> {
+  const key = await crypto.subtle.importKey("raw", encodeUtf8(secret), ALGORITHM, false, ["sign"]);
+  return encodeHex(new Uint8Array(await crypto.subtle.sign(ALGORITHM.name, key, message)));
 }

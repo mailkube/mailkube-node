@@ -14,13 +14,17 @@ if (!recipient) {
   process.exit(2);
 }
 
+// The verified sender this account may send from. Override per environment; the
+// fallback is a placeholder and will be rejected until you set your own domain.
+const sender = process.env.MAILKUBE_FROM ?? "Acme <hello@yourdomain.com>";
+
 const client = new Mailkube();
 const batchId = `welcome-wave-${Date.now()}`;
 const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
 for (const step of [1, 2, 3]) {
   const email = await client.emails.send({
-    from: "Acme <hello@yourdomain.com>",
+    from: sender,
     to: recipient,
     subject: `Onboarding step ${step}`,
     html: `<p>Step ${step} of 3.</p>`,
