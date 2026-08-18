@@ -19,7 +19,7 @@
  */
 import { MailkubeError, SignatureVerificationError } from "./errors.js";
 import { concatBytes, decodeHex, decodeUtf8, encodeUtf8, toBytes } from "./runtime/encoding.js";
-import { verifyHmacSha256 } from "./runtime/hmac.js";
+import { signHmacSha256, verifyHmacSha256 } from "./runtime/hmac.js";
 import { decodeWebhookEvent, type WebhookEvent } from "./types/events.js";
 
 const SIGNATURE_PREFIX = "sha256=";
@@ -98,6 +98,28 @@ export async function verifySignature<T extends string | Uint8Array>(
   }
 
   return payload;
+}
+
+/**
+ * Produce the `X-Webhook-Sig` value for a payload, the mirror of {@link verifySignature}.
+ *
+ * This is here so you can build a valid request in your own tests without reimplementing the HMAC
+ * from the prose above — a reimplementation agrees with your reading of the docs rather than with
+ * this SDK, and the two drift silently. Your production code verifies; it does not sign.
+ * @param id - The `X-Webhook-Id` value.
+ * @param timestamp - The `X-Webhook-Ts` value, ISO-8601.
+ * @param payload - The raw body that will be sent.
+ * @param secret - The endpoint's signing secret.
+ * @returns The header value, including the `sha256=` prefix.
+ */
+export async function sign(
+  id: string,
+  timestamp: string,
+  payload: string | Uint8Array,
+  secret: string,
+): Promise<string> {
+  const message = concatBytes(encodeUtf8(`${id}.${timestamp}.`), toBytes(payload));
+  return `${SIGNATURE_PREFIX}${await signHmacSha256(secret, message)}`;
 }
 
 /**

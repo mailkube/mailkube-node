@@ -136,7 +136,9 @@ holds in both directions, and `test/events.test.ts` asserts fixtures and registr
 | Timeout, merged with a caller's signal | `AbortSignal.timeout` + `AbortSignal.any` in `HttpTransport.#roundTrip()` |
 | Version from package metadata | `version.ts` + `scripts/generate-version.mjs`, asserted by the `version-bake` CI job |
 | `fetch` injection | `ClientOptions.fetch` |
+| User-Agent suffix | `ClientOptions.userAgentSuffix`, applied in `Config.defaultHeaders()` |
 | Webhook signature verification | `webhooks.ts` (no client instance needed) |
+| Webhook signing, the mirror of verification | `sign()` in `webhooks.ts` |
 | Escaped path segments | `itemPath()` in `resources/scheduled-emails.ts` |
 | Follow the server's `next` link, never a page counter | `nextPageSpec()`, walked by `iterAll()` |
 | Off-origin links refused | `Config.buildUrl()`, reached by every request including page links |

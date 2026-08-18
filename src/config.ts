@@ -28,6 +28,18 @@ export interface ClientOptions {
    */
   fetch?: typeof globalThis.fetch;
   /**
+   * A token appended to the `User-Agent`, for software that wraps this SDK.
+   *
+   * A CLI, an internal service and a framework integration all send requests the server sees as
+   * coming from this SDK; a suffix is what makes them distinguishable. Give it the conventional
+   * `name/version` form. This SDK's own token stays leading:
+   * `mailkube-node/1.2.3 my-cli/1.0.0`.
+   *
+   * A value containing a newline is ignored rather than sanitized: a header value that could be
+   * split is not one this package will send, and silently repairing it hides the caller's bug.
+   */
+  userAgentSuffix?: string;
+  /**
    * Where to write SDK debug output.
    *
    * Silent unless you pass one, call `enableLogging()`, or set `MAILKUBE_LOG`. Scoping it here
@@ -44,6 +56,8 @@ export class Config {
   readonly baseUrl: string;
   /** The per-request timeout in milliseconds. */
   readonly timeoutMs: number;
+  /** The caller-supplied User-Agent token, already validated; empty when there is none. */
+  readonly userAgentSuffix: string;
 
   /**
    * Resolve configuration, throwing when no API key can be found.
@@ -59,6 +73,8 @@ export class Config {
     this.apiKey = apiKey;
     this.baseUrl = options.baseUrl ?? readEnv("MAILKUBE_BASE_URL") ?? DEFAULT_BASE_URL;
     this.timeoutMs = options.timeoutMs ?? 30_000;
+    const suffix = options.userAgentSuffix?.trim() ?? "";
+    this.userAgentSuffix = /[\r\n]/.test(suffix) ? "" : suffix;
   }
 
   /**
@@ -66,9 +82,10 @@ export class Config {
    * @returns The default headers.
    */
   defaultHeaders(): Record<string, string> {
+    const agent = `mailkube-node/${version}`;
     return {
       Authorization: `Bearer ${this.apiKey}`,
-      "User-Agent": `mailkube-node/${version}`,
+      "User-Agent": this.userAgentSuffix ? `${agent} ${this.userAgentSuffix}` : agent,
       "Content-Type": "application/json",
       Accept: "application/json",
     };

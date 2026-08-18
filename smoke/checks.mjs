@@ -74,10 +74,11 @@ async function signHeaders(body) {
  * @returns {Promise<string>} A one-line summary, for the CI log.
  */
 export async function runChecks(sdk, expectedVersion) {
-  const { Mailkube, MailkubeError, verifySignature, version } = sdk;
+  const { Mailkube, MailkubeError, sign, verifySignature, version } = sdk;
 
   assert(typeof Mailkube === "function", "Mailkube is not exported");
   assert(typeof verifySignature === "function", "verifySignature is not exported");
+  assert(typeof sign === "function", "sign is not exported");
   assert(
     version === expectedVersion,
     `reported version ${version} is not the installed version ${expectedVersion}`,

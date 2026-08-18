@@ -95,4 +95,4 @@ export type {
   WebhookStatusPrevious,
 } from "./types/index.js";
 export { version } from "./version.js";
-export { parseEvent, verify, verifySignature } from "./webhooks.js";
+export { parseEvent, sign, verify, verifySignature } from "./webhooks.js";

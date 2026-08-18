@@ -71,3 +71,34 @@ describe("Config", () => {
     expect(new Config({ apiKey: "mk_test" }).timeoutMs).toBe(30_000);
   });
 });
+
+describe("userAgentSuffix", () => {
+  it("appends the caller's token after the SDK's own", () => {
+    const config = new Config({ apiKey: "mk_x", userAgentSuffix: "my-cli/1.0.0" });
+
+    expect(config.defaultHeaders()["User-Agent"]).toBe(`mailkube-node/${version} my-cli/1.0.0`);
+  });
+
+  it("ignores a suffix that could split the header", () => {
+    // Dropped rather than sanitized: repairing it would hide the caller's bug. Asserting the exact
+    // header, not just the absence of the injected name, is what distinguishes the two: a stripped
+    // or escaped value would also fail to contain `X-Injected` while still reaching the wire.
+    const config = new Config({ apiKey: "mk_x", userAgentSuffix: "bad\r\nX-Injected: 1" });
+
+    expect(config.defaultHeaders()["User-Agent"]).not.toContain("X-Injected");
+    expect(config.defaultHeaders()["User-Agent"]).toBe(`mailkube-node/${version}`);
+  });
+
+  it("treats a blank suffix as absent", () => {
+    const config = new Config({ apiKey: "mk_x", userAgentSuffix: "   " });
+
+    expect(config.defaultHeaders()["User-Agent"]?.endsWith(" ")).toBe(false);
+    expect(config.defaultHeaders()["User-Agent"]).toBe(`mailkube-node/${version}`);
+  });
+
+  it("trims surrounding whitespace off a real suffix", () => {
+    const config = new Config({ apiKey: "mk_x", userAgentSuffix: "  my-cli/1.0.0\t" });
+
+    expect(config.defaultHeaders()["User-Agent"]).toBe(`mailkube-node/${version} my-cli/1.0.0`);
+  });
+});

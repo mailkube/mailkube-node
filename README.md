@@ -43,6 +43,7 @@ on servers, workers and edge runtimes alike — see [Runtimes](#runtimes).
 | Base URL | `baseUrl` | `MAILKUBE_BASE_URL` | `https://api.mailkube.com/mta/v1/` |
 | Timeout | `timeoutMs` | | 30000 |
 | `fetch` | `fetch` | | the global one |
+| User-Agent suffix | `userAgentSuffix` | | none |
 | Logger | `logger` | `MAILKUBE_LOG` | silent |
 
 Pass your own `fetch` to add instrumentation, a proxy agent, or a stub in tests:
@@ -50,6 +51,19 @@ Pass your own `fetch` to add instrumentation, a proxy agent, or a stub in tests:
 ```ts
 const client = new Mailkube({ fetch: myInstrumentedFetch });
 ```
+
+If you are building something on top of this SDK — a CLI, an internal service, a framework
+integration — identify it, so your traffic is distinguishable from direct use. This SDK's own
+token stays leading:
+
+```ts
+const client = new Mailkube({ userAgentSuffix: "my-cli/1.0.0" });
+// User-Agent: mailkube-node/1.2.3 my-cli/1.0.0
+```
+
+Surrounding whitespace is trimmed. A value containing a newline is **ignored rather than
+sanitized**: a header value that could be split is not one this package will send, and silently
+repairing it would hide the bug.
 
 There are deliberately **no built-in retries**. A `RateLimitError` carries `retryAfter` and a
 `ServerError` is safe to retry with backoff, so the calling application decides. Pass
@@ -211,6 +225,19 @@ app.post("/webhooks/mailkube", express.raw({ type: "application/json" }), async 
 Verification is **async** everywhere: `crypto.subtle` is the only digest API all target runtimes
 share, and it is promise-based. Use `verifySignature` if you want verification without parsing, and
 `parseEvent` for the reverse.
+
+`sign` is the mirror, so your own tests can build a valid request without reimplementing the HMAC
+from this page:
+
+```ts
+import { sign } from "@mailkube/mailkube-node";
+
+const timestamp = new Date().toISOString();
+const signature = await sign("wh_1", timestamp, body, secret);
+// sha256=<hex>, ready to send as X-Webhook-Sig
+```
+
+Your production code verifies; it does not sign.
 
 `X-Webhook-Id` is stable across retries, so use it to deduplicate. Timestamps outside a 300 second
 window are rejected; pass a fourth argument to widen it.
