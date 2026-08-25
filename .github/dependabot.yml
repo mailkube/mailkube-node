@@ -10,6 +10,14 @@ updates:
       include: "scope"
     labels:
       - "dependencies"
+    ignore:
+      # Held at 9.x on purpose. semantic-release 25's @semantic-release/release-notes-generator
+      # pins conventional-changelog-writer ^8, and this preset's 10.x rewrote its templates for
+      # writer >= 9 — so 10.x fails `generateNotes` at release time with `Missing helper`, after
+      # the version has already been decided. No CI job catches it: the release workflow runs
+      # only on push to `main`. Lift this when semantic-release ships writer 9.
+      - dependency-name: "conventional-changelog-conventionalcommits"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
