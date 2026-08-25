@@ -73,6 +73,23 @@ are the changelog**; there is no `CHANGELOG.md` in this repo.
   step stays as a guard: 26.2.0 bundles npm 11.13.0 and already clears the floor, but a lower pin
   whose bundled npm lags would leave the publish failing with `ENONPMTOKEN` on a correctly
   configured OIDC setup. Cloud-hosted runners only; self-hosted is not supported.
+- **The `conventionalcommits` preset is pinned to 9.x, and the pin is load-bearing.**
+  `.releaserc.json` sets `preset: "conventionalcommits"` on both `commit-analyzer` and
+  `release-notes-generator`, because the default (angular) preset does not implement the
+  Conventional Commits `!` breaking marker that `CONTRIBUTING.md` and `pr-title.yml` both accept —
+  a `feat!:` title parsed as no type at all and silently skipped a release. The preset package is
+  **not** bundled with semantic-release and must stay in `devDependencies`, or the run dies with
+  `Cannot find module 'conventional-changelog-conventionalcommits'`. Do **not** let it reach 10.x:
+  semantic-release 25's `release-notes-generator` pins `conventional-changelog-writer ^8`, and the
+  preset's 10.x rewrote its templates for writer >= 9, so `generateNotes` fails with
+  `Missing helper` *after* the version has been decided. `.github/dependabot.yml` ignores that
+  major for this reason. Revisit when semantic-release ships writer 9.
+- **Changing anything about release config? Dry-run the whole plugin chain, not one plugin.** The
+  release workflow runs only on push to `main`, so no PR exercises it. To test a change, clone
+  `main`, apply the config, drop the `npm`/`github` plugins (they need OIDC that only exists in
+  CI), and run `npx semantic-release@<pinned> --dry-run --no-ci`. Keep `release-notes-generator`
+  in the list: analysing commits and rendering notes fail independently, and an analyze-only dry
+  run reports a healthy `next release version` for a config that then dies in `generateNotes`.
 - **Bootstrap publish, once.** npm can only attach a Trusted Publisher to a package that exists, so
   the first version goes out by hand: in a scratch checkout, `npm install`, then
   `npm version --no-git-tag-version <v>`, then `npm publish --access public`. The `npm install` is
