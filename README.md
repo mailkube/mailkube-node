@@ -290,7 +290,7 @@ on every runtime below before anything is published.
 
 | Runtime | Notes |
 |---|---|
-| **Node 20.3+** | ESM and CommonJS both resolve. `require("@mailkube/mailkube-node")` works. |
+| **Node 22.12+** | ESM and CommonJS both resolve. `require("@mailkube/mailkube-node")` works. |
 | **Cloudflare Workers** | No `nodejs_compat` needed. Build the client per request from the `env` binding. |
 | **AWS Lambda / GCP Cloud Functions** | Plain Node. Hoist the client to module scope so it is reused across invocations. |
 | **Deno** | `import { Mailkube } from "npm:@mailkube/mailkube-node"`. |

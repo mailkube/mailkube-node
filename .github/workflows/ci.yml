@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20, 22, 24]
+        node-version: [22, 24, 26]
     steps:
       - uses: actions/checkout@v7
 
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version-file: .nvmrc
           cache: npm
       - run: npm install
       - name: Pack (runs prepack → generate-version + tsup)
@@ -73,7 +73,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version-file: .nvmrc
       - uses: actions/download-artifact@v8
         with:
           name: tarball
@@ -99,7 +99,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version-file: .nvmrc
           cache: npm
       - run: npm install
       - name: Pack at a synthetic version and assert it is baked in
@@ -127,23 +127,29 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runtime: node20
-            node: "20"
           - runtime: node22
             node: "22"
           - runtime: node24
             node: "24"
+          - runtime: node26
+            node: "26"
+          # No `node:` key: these runtimes only need a host toolchain to install the tarball,
+          # so they take it from `.nvmrc` via the second setup-node step below.
           - runtime: deno
-            node: "22"
           - runtime: bun
-            node: "22"
           - runtime: workerd
-            node: "22"
     steps:
       - uses: actions/checkout@v7
+      # The Node legs pin the version under test; every other runtime just needs a host
+      # toolchain to run `npm install ./mailkube.tgz`, so it takes the pinned dev version.
       - uses: actions/setup-node@v7
+        if: startsWith(matrix.runtime, 'node')
         with:
           node-version: ${{ matrix.node }}
+      - uses: actions/setup-node@v7
+        if: ${{ !startsWith(matrix.runtime, 'node') }}
+        with:
+          node-version-file: .nvmrc
       - uses: denoland/setup-deno@v2
         if: matrix.runtime == 'deno'
         with:
@@ -196,7 +202,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version-file: .nvmrc
       - name: Examples parse (node --check)
         # One file per invocation, deliberately: `node --check a.mjs b.mjs` checks only the FIRST
         # argument and exits 0, so the glob form would be a green no-op. `|| exit 1` is the other

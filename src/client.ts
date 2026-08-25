@@ -68,8 +68,8 @@ function resolveFetch(explicit?: typeof globalThis.fetch): typeof globalThis.fet
   const candidate: unknown = explicit ?? globalThis.fetch;
   if (typeof candidate !== "function") {
     throw new MailkubeError(
-      "No fetch implementation is available. This SDK requires Node 20.3 or later " +
-        "(`nvm install 20`), a Worker, Deno or Bun runtime — or pass your own: " +
+      "No fetch implementation is available. This SDK requires Node 22.12 or later " +
+        "(`nvm install 22`), a Worker, Deno or Bun runtime — or pass your own: " +
         "new Mailkube({ fetch }).",
     );
   }

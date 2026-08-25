@@ -295,6 +295,10 @@ describe("client construction", () => {
     try {
       expect(() => new Mailkube({ apiKey: "mk_test" })).toThrow(MailkubeError);
       expect(() => new Mailkube({ apiKey: "mk_test" })).toThrow(/No fetch implementation/);
+      // Pinned to the exact floor, not just /Node 22/: this message is the only place the
+      // supported version is stated to a user at failure time, and nothing else would catch it
+      // drifting away from `engines.node` on the next bump.
+      expect(() => new Mailkube({ apiKey: "mk_test" })).toThrow(/Node 22\.12 or later/);
     } finally {
       if (original) {
         Object.defineProperty(globalThis, "fetch", original);

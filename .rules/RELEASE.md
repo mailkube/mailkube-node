@@ -65,10 +65,14 @@ are the changelog**; there is no `CHANGELOG.md` in this repo.
 - The GitHub repository must be **public**, and so must the npm package. npm refuses to generate
   provenance otherwise.
 - GitHub **environment** `release` must exist (Settings → Environments) with protection rules.
-- The runner needs **npm >= 11.5.1 on Node >= 22.14.0** for trusted publishing, which is why
-  `release.yml` pins Node 24 *and* installs npm explicitly. The npm bundled with a Node release lags
-  behind that floor, so setting `node-version` alone leaves the publish failing with `ENONPMTOKEN`
-  on a correctly configured OIDC setup. Cloud-hosted runners only; self-hosted is not supported.
+- The runner needs **npm >= 11.5.1 on Node >= 22.14.0** for trusted publishing. `release.yml` pins
+  its Node version explicitly (26.2.0) rather than reading `.nvmrc` like every job in `ci.yml`:
+  that floor must not become hostage to a file whose job is the *dev* toolchain, and this workflow
+  runs only on push to `main`, so no PR ever executes it — the first run of any change here is the
+  real publish. **That pin must never drop below 22.14.0.** The explicit `npm install -g npm@^11.5.1`
+  step stays as a guard: 26.2.0 bundles npm 11.13.0 and already clears the floor, but a lower pin
+  whose bundled npm lags would leave the publish failing with `ENONPMTOKEN` on a correctly
+  configured OIDC setup. Cloud-hosted runners only; self-hosted is not supported.
 - **Bootstrap publish, once.** npm can only attach a Trusted Publisher to a package that exists, so
   the first version goes out by hand: in a scratch checkout, `npm install`, then
   `npm version --no-git-tag-version <v>`, then `npm publish --access public`. The `npm install` is
