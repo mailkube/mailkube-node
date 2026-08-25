@@ -22,7 +22,7 @@
     "sdk"
   ],
   "engines": {
-    "node": ">=20.3"
+    "node": ">=22.12"
   },
   "exports": {
     ".": {
@@ -61,17 +61,17 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^22.7.0",
-    "@vitest/coverage-v8": "^4.1.10",
-    "eslint": "^10.8.1",
-    "eslint-plugin-jsdoc": "^64.1.0",
+    "@types/node": "^26.3.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^10.9.1",
+    "eslint-plugin-jsdoc": "^64.2.1",
     "eslint-plugin-sonarjs": "^4.2.0",
     "globals": "^17.11.0",
     "prettier": "^3.3.0",
     "tsup": "^8.3.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.10.0",
-    "vitest": "^4.1.10"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.1.11"
   },
   "prettier": {
     "semi": true,

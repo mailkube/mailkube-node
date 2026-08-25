@@ -4,18 +4,20 @@
  * Part of the runtime layer: the only place in `src/` allowed to name a host global. `node:crypto`
  * is deliberately absent — a static import of it makes the whole package unbundleable for
  * Cloudflare Workers, Deno and every bundler — so `crypto.subtle` does the work instead. It is
- * present on Node 20+, workerd, Deno and Bun.
+ * present on Node 22+, workerd, Deno and Bun.
  *
  * **The comparison is done here rather than by `crypto.subtle.verify`, on purpose.** `verify`
  * looks like the obvious call and is not safe for this: the W3C WebCrypto specification places no
  * timing requirement on it, and Node's implementation compared with plain `memcmp` in
- * `crypto_hmac.cc` until CVE-2026-21713 was fixed in 20.20.2 / 22.22.2 / 24.14.1 / 25.8.2 — inside
- * the range this package's `engines` floor supports. workerd, Deno and Bun document no guarantee
- * either. Delegating would therefore reintroduce the timing oracle that `.rules/SDK_CONTRACT.md`
+ * `crypto_hmac.cc` until CVE-2026-21713 was fixed in 22.22.2 / 24.14.1 / 25.8.2. This file is the
+ * single home for that version list — `.rules/SDK_DESIGN.md` points here rather than repeating it,
+ * because the two copies had already drifted once and no gate compares them. The floor still
+ * admits vulnerable runtimes: `engines.node` is `>=22.12`, so anything from 22.12 to 22.22.1 is
+ * inside the affected range. workerd, Deno and Bun document no guarantee either. Delegating would therefore reintroduce the timing oracle that `.rules/SDK_CONTRACT.md`
  * ("Compare in constant time") exists to prevent, on a signature check that is the entire security
  * boundary of webhook delivery.
  */
-import { encodeHex, encodeUtf8 } from "./encoding.js";
+import { encodeHex, encodeUtf8, type OwnedBytes } from "./encoding.js";
 
 const ALGORITHM = { name: "HMAC", hash: "SHA-256" } as const;
 
@@ -46,7 +48,7 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
  */
 export async function verifyHmacSha256(
   secret: string,
-  message: Uint8Array,
+  message: OwnedBytes,
   signature: Uint8Array,
 ): Promise<boolean> {
   const key = await crypto.subtle.importKey("raw", encodeUtf8(secret), ALGORITHM, false, ["sign"]);
@@ -63,7 +65,7 @@ export async function verifyHmacSha256(
  * @param message - The exact bytes to sign.
  * @returns The signature as lowercase hex.
  */
-export async function signHmacSha256(secret: string, message: Uint8Array): Promise<string> {
+export async function signHmacSha256(secret: string, message: OwnedBytes): Promise<string> {
   const key = await crypto.subtle.importKey("raw", encodeUtf8(secret), ALGORITHM, false, ["sign"]);
   return encodeHex(new Uint8Array(await crypto.subtle.sign(ALGORITHM.name, key, message)));
 }

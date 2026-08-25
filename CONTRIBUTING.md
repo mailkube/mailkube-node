@@ -9,7 +9,9 @@ Please also read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Development setup
 
-Requires Node.js 20+.
+Requires Node.js 22.12+, the floor this package publishes in `engines.node`. The pinned dev
+toolchain is in `.nvmrc` (`nvm use` picks it up); CI reads that same file, so matching it locally
+is the closest you get to reproducing a CI run.
 
 ```bash
 git clone https://github.com/mailkube/mailkube-node

@@ -31,14 +31,21 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Pinned explicitly rather than read from `.nvmrc`, unlike every job in ci.yml. Two reasons:
+      # trusted publishing imposes its own floor (below), which must not become hostage to a file
+      # whose job is the *dev* toolchain; and this workflow runs only on push to `main`, so a PR
+      # never executes it — the first run of any change here is the real publish. Fewer moving
+      # parts in the job holding `id-token: write`.
       - uses: actions/setup-node@v7
         with:
-          node-version: "24"
+          node-version: "26.2.0"
           registry-url: "https://registry.npmjs.org"
 
-      # Trusted publishing requires npm >= 11.5.1 AND Node >= 22.14.0. Bumping node-version alone
-      # is not enough: the npm bundled with a Node release lags well behind that floor, so without
-      # this step the publish fails with ENONPMTOKEN even though OIDC is configured correctly.
+      # Trusted publishing requires npm >= 11.5.1 AND Node >= 22.14.0. The pin above satisfies
+      # both (Node 26.2.0 bundles npm 11.13.0), so this step is a guard rather than a fix: it
+      # keeps the publish working if that pin is ever lowered to a Node whose bundled npm is
+      # older. Without it such a publish fails with ENONPMTOKEN even though OIDC is configured
+      # correctly.
       - name: Install an npm new enough for trusted publishing
         run: npm install -g npm@^11.5.1
 

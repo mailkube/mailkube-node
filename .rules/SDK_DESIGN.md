@@ -40,7 +40,7 @@ the packed tarball on Node (ESM and CJS), Cloudflare Workers without `nodejs_com
 ## Zero runtime dependencies
 
 The package has **no `dependencies`**, only `devDependencies`. It uses the platform: global `fetch`,
-`AbortSignal.timeout`, `AbortSignal.any`, `crypto.subtle`, `btoa` and `TextEncoder`. Node 20.3+,
+`AbortSignal.timeout`, `AbortSignal.any`, `crypto.subtle`, `btoa` and `TextEncoder`. Node 22.12+,
 workerd, Deno and Bun all provide them. Adding a runtime dependency to this package needs a real
 justification, because every consumer inherits it.
 
@@ -72,9 +72,11 @@ Four, all recorded here as the contract requires. None is a preference.
 2. **The constant-time comparison is written here rather than delegated.** The contract says
    "compare in constant time", and `crypto.subtle.verify` is the obvious way to get it. It is not:
    the W3C specification places no timing requirement on `verify`, and Node compared with plain
-   `memcmp` in `crypto_hmac.cc` until CVE-2026-21713 was fixed in 20.20.2 / 22.22.2 / 24.14.1 —
-   versions inside this package's supported range. `runtime/hmac.ts` therefore signs and compares
-   with a branchless accumulator of its own. Do not "simplify" it back to `subtle.verify`.
+   `memcmp` in `crypto_hmac.cc` until CVE-2026-21713 was fixed — in versions still inside this
+   package's supported range, since `engines.node` is `>=22.12`. **The affected-version list lives
+   in `src/runtime/hmac.ts` and is deliberately not repeated here:** the two copies drifted apart
+   once already and no gate compares them. `runtime/hmac.ts` therefore signs and compares with a
+   branchless accumulator of its own. Do not "simplify" it back to `subtle.verify`.
 
 3. **Unknown webhook fields survive on `raw`, not on the model.** The contract requires that
    unknown fields be preserved rather than dropped. A decoder that merged unrecognized keys into a
@@ -111,6 +113,14 @@ holds in both directions, and `test/events.test.ts` asserts fixtures and registr
   is why an unset field is absent from the wire rather than sent as null.
 - **`verbatimModuleSyntax` is on**, so type-only imports must use `import type`, and relative
   imports carry the `.js` extension that Node ESM requires at runtime.
+- **Two `tsconfig.json` options exist only to keep `tsup`'s declaration build working on
+  TypeScript 6, and both should be revisited when `tsup` is next upgraded.** `tsup` injects
+  `baseUrl: compilerOptions.baseUrl || "."` into its `dts` program (`dist/rollup.js`), and TS 6
+  errors on `baseUrl` as deprecated, so `"ignoreDeprecations": "6.0"` is required — this repo sets
+  no deprecated option of its own, so the flag suppresses nothing we control. Separately, that
+  same program stopped picking up ambient Node globals (`console` went missing) until
+  `"types": ["node"]` made the dependency explicit. Neither weakens type checking: `tsc --noEmit`
+  is as strict as before, and the emitted `.d.ts` is byte-for-byte what TypeScript 5.9 produced.
 - **Response decoding is explicit, one small `Decoder` per model.** Models are camelCase and the
   wire is snake_case, so a mapping is unavoidable; a generic snake-to-camel converter is rejected
   because it invents fields no model declares and mangles keys like `from` and `object`. Build
@@ -171,7 +181,7 @@ answered.
 first Worker or Deno consumer to install the package.
 
 So the smoke scripts run against the **packed tarball** installed into a scratch project, importing
-the bare specifier `"@mailkube/mailkube-node"`, on Node 20/22/24 (ESM *and* CommonJS), Cloudflare Workers without
+the bare specifier `"@mailkube/mailkube-node"`, on Node 22/24/26 (ESM *and* CommonJS), Cloudflare Workers without
 `nodejs_compat`, Deno under `--deny-env`, and Bun. Rules worth keeping:
 
 - **Never `npm:@mailkube/mailkube-node`.** In Deno that is a registry fetch: the job would 404 before the first

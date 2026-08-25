@@ -3,7 +3,7 @@
  *
  * Part of the runtime layer: the only place in `src/` allowed to name a host global. `Buffer` is
  * deliberately absent — it does not exist on Cloudflare Workers without `nodejs_compat`, nor in
- * Deno — so `btoa` and `TextEncoder` do the work instead. Both are present on Node 20+, workerd,
+ * Deno — so `btoa` and `TextEncoder` do the work instead. Both are present on Node 22+, workerd,
  * Deno and Bun.
  */
 
@@ -19,11 +19,22 @@ const CHUNK_SIZE = 0x2000;
 const HEX_PATTERN = /^[0-9a-fA-F]*$/;
 
 /**
+ * Bytes this SDK allocated, backed by a plain `ArrayBuffer`.
+ *
+ * WebCrypto's `BufferSource` excludes `SharedArrayBuffer` views, while a bare `Uint8Array` is
+ * `Uint8Array<ArrayBufferLike>`, which includes them. Every array built in this file is freshly
+ * allocated and so satisfies this; caller-supplied bytes stay wide and reach WebCrypto only after
+ * passing through {@link concatBytes}. Parameters are never narrowed to this type — a caller
+ * handing over an `express.raw()` `Buffer` must keep type-checking.
+ */
+export type OwnedBytes = Uint8Array<ArrayBuffer>;
+
+/**
  * Encode text as UTF-8 bytes.
  * @param text - The text to encode.
  * @returns The UTF-8 bytes.
  */
-export function encodeUtf8(text: string): Uint8Array {
+export function encodeUtf8(text: string): OwnedBytes {
   return new TextEncoder().encode(text);
 }
 
@@ -54,7 +65,7 @@ export function toBytes(payload: string | Uint8Array): Uint8Array {
  * @param parts - The arrays to join, in order.
  * @returns One array holding every part.
  */
-export function concatBytes(...parts: Uint8Array[]): Uint8Array {
+export function concatBytes(...parts: Uint8Array[]): OwnedBytes {
   const total = parts.reduce((sum, part) => sum + part.length, 0);
   const joined = new Uint8Array(total);
   let offset = 0;
@@ -87,7 +98,7 @@ export function encodeBase64(bytes: Uint8Array): string {
  * @param hex - The hex text, without any prefix.
  * @returns The bytes, or undefined when the input is not valid hex.
  */
-export function decodeHex(hex: string): Uint8Array | undefined {
+export function decodeHex(hex: string): OwnedBytes | undefined {
   if (hex.length % 2 !== 0 || !HEX_PATTERN.test(hex)) {
     return undefined;
   }
