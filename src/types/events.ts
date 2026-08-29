@@ -77,9 +77,17 @@ export interface FailureContext extends DeliveryContext {
 
 /** An open interaction. Note the nested keys are camelCase on the wire, unlike their siblings. */
 export interface EngagementContext {
-  /** The IP the interaction came from. */
+  /**
+   * The IP the interaction came from.
+   * @deprecated The platform no longer records it, so a current server omits the key and this
+   * reads as an empty string. Retained so code written against an earlier version still compiles
+   * and so an event replayed from an archive still decodes.
+   */
   ipAddress: string;
-  /** The user agent the interaction came from. */
+  /**
+   * The user agent the interaction came from.
+   * @deprecated As for `ipAddress`.
+   */
   userAgent: string;
   /** When it happened. */
   timestamp: string;

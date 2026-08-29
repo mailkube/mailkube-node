@@ -202,6 +202,25 @@ describe("nested blocks", () => {
     });
   });
 
+  it("decodes an engagement block that omits ipAddress and userAgent", () => {
+    // The platform stopped recording both, so a current server sends neither key. A released
+    // client must never raise on a payload it has not seen, so this decodes to empty strings.
+    const stripped = payload("email.opened", {
+      open: { timestamp: "2026-08-13T07:00:08Z" },
+    });
+
+    const event = parseEvent(JSON.stringify(stripped));
+    if (event.type !== "email.opened") {
+      throw new Error("wrong arm");
+    }
+
+    expect(event.data.open).toEqual({
+      ipAddress: "",
+      userAgent: "",
+      timestamp: "2026-08-13T07:00:08Z",
+    });
+  });
+
   it("decodes a scheduling block, whose wire keys are snake_case", () => {
     const event = parseEvent(JSON.stringify(FIXTURES["email.scheduled"]));
     if (event.type !== "email.scheduled") {
