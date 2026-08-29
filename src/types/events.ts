@@ -78,17 +78,19 @@ export interface FailureContext extends DeliveryContext {
 /** An open interaction. Note the nested keys are camelCase on the wire, unlike their siblings. */
 export interface EngagementContext {
   /**
-   * The IP the interaction came from.
-   * @deprecated The platform no longer records it, so a current server omits the key and this
-   * reads as an empty string. Retained so code written against an earlier version still compiles
-   * and so an event replayed from an archive still decodes.
+   * The IP the interaction came from. Present only where the sending domain elected to record it,
+   * which is off by default, so `undefined` means the sender did not record it rather than that
+   * the value was blank.
    */
-  ipAddress: string;
+  ipAddress?: string;
   /**
-   * The user agent the interaction came from.
-   * @deprecated As for `ipAddress`.
+   * The country the address resolves to, as a two-letter code. Elected together with `ipAddress`,
+   * but can still be absent when it was recorded: it is resolved at the edge and is not available
+   * on every path.
    */
-  userAgent: string;
+  country?: string;
+  /** The user agent the interaction came from. Elected separately from `ipAddress`. */
+  userAgent?: string;
   /** When it happened. */
   timestamp: string;
 }
@@ -413,10 +415,17 @@ const decodeFailure: Decoder<FailureContext> = (payload) => {
  */
 const decodeEngagement: Decoder<EngagementContext> = (payload) => {
   const source = record(payload);
+  // camelCase on the wire here, unlike every sibling block. The three connection
+  // fields are elected per sending domain: a key the sender did not elect is
+  // absent from the payload and is left absent here rather than defaulted to "",
+  // so a caller can tell "not recorded" from "recorded blank".
+  const ipAddress = text(source, "ipAddress");
+  const country = text(source, "country");
+  const userAgent = text(source, "userAgent");
   return {
-    // camelCase on the wire here, unlike every sibling block.
-    ipAddress: textOr(source, "ipAddress", ""),
-    userAgent: textOr(source, "userAgent", ""),
+    ...(ipAddress === undefined ? {} : { ipAddress }),
+    ...(country === undefined ? {} : { country }),
+    ...(userAgent === undefined ? {} : { userAgent }),
     timestamp: textOr(source, "timestamp", ""),
   };
 };

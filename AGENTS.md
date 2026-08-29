@@ -34,5 +34,6 @@ as `@mailkube/mailkube-node`. Load the relevant rule file from `.rules/` based o
 - **No duplication** — the `jscpd` gate blocks at > 1% duplicated code; extract shared logic.
 - **Conventional Commits** for PR titles (squash-merged); only `feat:`/`fix:`/`perf:` cut a release.
 - **No secrets in the repo** — local config lives in a git-ignored `.env`; publishing is tokenless OIDC.
+- **Keep the `README` current** with user-visible changes: it is the only reference this package publishes.
 - **Releases commit nothing to `main`** — the git tag is the version, and the GitHub Release
   notes are the changelog; there is no `CHANGELOG.md` (see `.rules/RELEASE.md`).

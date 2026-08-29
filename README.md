@@ -258,6 +258,13 @@ window are rejected; pass a fourth argument to widen it.
 | `domain.status` | `previous` | A sending domain's status or onboarding state changed |
 | `webhook.status` | `previous` | An endpoint was disabled, re-enabled or deleted |
 
+The `open` and `click` blocks are different: `ipAddress`, `country` and `userAgent` are recorded only
+where the sending domain has elected them, and both settings are off by default. The server omits the
+key rather than sending an empty value, and the decoder leaves the property off the object, so
+`"ipAddress" in event.data.open` tells "not recorded" apart from "recorded blank". `country` can be
+missing even where the address was recorded, because it is resolved at the edge and is not available
+on every path.
+
 Two guarantees for receivers, both so an older SDK never breaks on a newer platform:
 
 - **An unrecognized type is not an error.** It arrives with `type: "unknown"`, the server's own
