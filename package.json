@@ -4,7 +4,7 @@
   "description": "Mailkube Node.js SDK",
   "type": "module",
   "license": "Apache-2.0",
-  "author": "Mailtactic, Corp.",
+  "author": "Mail Tactic Corporation",
   "homepage": "https://github.com/mailkube/mailkube-node#readme",
   "repository": {
     "type": "git",
