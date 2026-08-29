@@ -202,6 +202,42 @@ describe("nested blocks", () => {
     });
   });
 
+  it("leaves an unelected connection key absent rather than defaulting it", () => {
+    // The three connection fields are elected per sending domain and are off by default, so a
+    // payload without them is the common case. Asserting the exact object pins the distinction
+    // between "the sender did not record this" and "the sender recorded a blank": defaulting to
+    // "" would erase it, and the election boundary is where the consent duty sits.
+    const stripped = payload("email.opened", {
+      open: { timestamp: "2026-08-13T07:00:08Z" },
+    });
+
+    const event = parseEvent(JSON.stringify(stripped));
+    if (event.type !== "email.opened") {
+      throw new Error("wrong arm");
+    }
+
+    expect(event.data.open).toEqual({ timestamp: "2026-08-13T07:00:08Z" });
+    expect("ipAddress" in event.data.open).toBe(false);
+  });
+
+  it("decodes an elected country alongside the address", () => {
+    const elected = payload("email.opened", {
+      open: { timestamp: "2026-08-13T07:00:08Z", ipAddress: "203.0.113.7", country: "FR" },
+    });
+
+    const event = parseEvent(JSON.stringify(elected));
+    if (event.type !== "email.opened") {
+      throw new Error("wrong arm");
+    }
+
+    // userAgent is elected separately, so it stays absent even though the address was recorded.
+    expect(event.data.open).toEqual({
+      ipAddress: "203.0.113.7",
+      country: "FR",
+      timestamp: "2026-08-13T07:00:08Z",
+    });
+  });
+
   it("decodes a scheduling block, whose wire keys are snake_case", () => {
     const event = parseEvent(JSON.stringify(FIXTURES["email.scheduled"]));
     if (event.type !== "email.scheduled") {
