@@ -10,6 +10,17 @@ updates:
       include: "scope"
     labels:
       - "dependencies"
+    groups:
+      # `@vitest/coverage-v8` peer-depends on the EXACT vitest version ("vitest": "5.0.1", not a
+      # range), so the two move as a unit or not at all. Ungrouped, Dependabot opens one PR per
+      # package and each one alone fails `npm install` with ERESOLVE — neither is mergeable, and
+      # the conflict looks like a repo defect rather than a split update. Nothing on our side can
+      # relax the pin; matching it is the only option, so the grouping is what makes these
+      # updatable at all.
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
     ignore:
       # Held at 9.x on purpose. semantic-release 25's @semantic-release/release-notes-generator
       # pins conventional-changelog-writer ^8, and this preset's 10.x rewrote its templates for
