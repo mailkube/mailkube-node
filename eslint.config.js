@@ -63,6 +63,14 @@ export default tseslint.config(
     // written — `flat/recommended-typescript`, applied above, bans it on the assumption the
     // signature carries it. This restores the JS half of the same preset for this directory only.
     extends: [jsdoc.configs["flat/recommended"]],
+    rules: {
+      // `error-handling.mjs` declares its own `expect(label, expectedName, run)`: a runner that
+      // compares the thrown error's name itself and counts failures. sonarjs 4.2.1's
+      // no-incomplete-assertions matches on the NAME `expect` and reads each call as a matcher
+      // left dangling, which reports the whole file as five errors and finds nothing real. The
+      // rule keeps working in src/ and test/, where `expect` does mean vitest's.
+      "sonarjs/no-incomplete-assertions": "off",
+    },
   },
   {
     // Tests relax docs + complexity: a test's name is its documentation, and table-driven cases
