@@ -34,6 +34,7 @@ export {
   type ErrorNameValue,
 } from "./errors.js";
 export { disableLogging, enableLogging, redactHeaders, type Logger } from "./logging.js";
+export { CredentialResource } from "./resources/credential.js";
 export { EmailsResource } from "./resources/emails.js";
 export {
   ScheduledEmailBatchesResource,
@@ -41,6 +42,11 @@ export {
 } from "./resources/scheduled-emails.js";
 export type { RequestSpec, SendTransport, TypedTransport } from "./transport.js";
 export type {
+  ApiKey,
+  ApiKeyDomain,
+  ApiKeyOrganization,
+  ApiKeyPlan,
+  ApiKeyQuota,
   Attachment,
   BouncedData,
   CanceledScheduledEmail,

@@ -6,7 +6,9 @@
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Code of Conduct](https://img.shields.io/badge/Contributor%20Covenant-2.1-purple.svg)](CODE_OF_CONDUCT.md)
 
-Mailkube Node.js SDK
+The official Node.js SDK for [mailkube](https://mailkube.com).
+
+Full product and API documentation: [docs.mailkube.com/sdks/node](https://docs.mailkube.com/sdks/node).
 
 ## Install
 
@@ -81,14 +83,15 @@ of sending twice, and `email.idempotentReplayed` tells you which happened.
 ### Cancellation
 
 Every call accepts an `AbortSignal`, merged with the client timeout so whichever fires first wins.
-On `send` it sits alongside the other parameters; on the scheduled-email verbs it is a second
-argument, so it can never be mistaken for a filter:
+On `send` it sits alongside the other parameters; on the scheduled-email and credential verbs it is
+the last argument, so it can never be mistaken for a filter:
 
 ```ts
 const controller = new AbortController();
 
 await client.emails.send({ ...params, signal: controller.signal });
 await client.scheduledEmails.list({ status: "scheduled" }, { signal: controller.signal });
+await client.credential.info({ signal: controller.signal });
 ```
 
 ### Errors
@@ -194,6 +197,28 @@ const { canceledCount } = await client.scheduledEmails.batches.cancel("welcome-w
 ```
 
 An unknown batch is a no-op reporting `0`, not an error.
+
+## Your API key
+
+`client.credential.info()` describes the key the client authenticates with: its domain,
+organization, source-IP allowlist, plan and send-quota usage.
+
+```ts
+const key = await client.credential.info();
+console.log(key.keyId, key.domain.name, key.organization.alias);
+
+for (const quota of key.plan?.quotas ?? []) {
+  console.log(quota.name, quota.used, quota.limit, quota.period);
+}
+```
+
+The key is checked exactly as a send checks it, so a key that cannot send raises
+`AuthenticationError` (`invalid_api_key`): calling `info()` is how to verify a key. The call counts
+as a use of the key, and plan and quota figures can be up to 30 seconds old. `plan` is undefined
+when the organization has no subscription, and a plan without a daily limit lists
+`emails_per_month` only. `remaining` counts recipients, not messages.
+
+The client keeps the key it was constructed with. To use another key, construct another client.
 
 ## Verify webhooks
 
