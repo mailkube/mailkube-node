@@ -131,3 +131,23 @@ export function listOf<T>(source: Record<string, unknown>, key: string, decode: 
 export function nested<T>(source: Record<string, unknown>, key: string, decode: Decoder<T>): T {
   return decode(source[key]);
 }
+
+/**
+ * Read a nested object that the API sends as `null` when there is none, decoding it.
+ *
+ * The exception to "every reader has a default": where `null` means "there is no such thing",
+ * decoding it as an empty object would hand the caller one built from defaults, indistinguishable
+ * from a real one. The calling key's `plan` is that case.
+ * @param source - The payload being read.
+ * @param key - The wire field name.
+ * @param decode - The decoder for the nested object.
+ * @returns The decoded object, or undefined when the field is absent, null or not an object.
+ */
+export function optionalNested<T>(
+  source: Record<string, unknown>,
+  key: string,
+  decode: Decoder<T>,
+): T | undefined {
+  const value = source[key];
+  return typeof value === "object" && value !== null ? decode(value) : undefined;
+}

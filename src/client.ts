@@ -4,6 +4,7 @@
 import { Config, type ClientOptions } from "./config.js";
 import { MailkubeError } from "./errors.js";
 import { resolveLogger } from "./logging.js";
+import { CredentialResource } from "./resources/credential.js";
 import { EmailsResource } from "./resources/emails.js";
 import { ScheduledEmailsResource } from "./resources/scheduled-emails.js";
 import { HttpTransport } from "./transport.js";
@@ -38,6 +39,9 @@ export class Mailkube {
   /** The `scheduled_emails` namespace, for sends accepted but not yet delivered. */
   readonly scheduledEmails: ScheduledEmailsResource;
 
+  /** The `credential` namespace: the API key this client authenticates with. */
+  readonly credential: CredentialResource;
+
   /**
    * Create the client, resolving configuration and wiring the transport.
    * @param options - Credentials, base URL, timeout and the optional fetch override.
@@ -51,6 +55,7 @@ export class Mailkube {
     );
     this.emails = new EmailsResource(transport);
     this.scheduledEmails = new ScheduledEmailsResource(transport);
+    this.credential = new CredentialResource(transport);
   }
 }
 

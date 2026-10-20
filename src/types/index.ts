@@ -55,6 +55,7 @@ export type {
   Tag,
 } from "./params.js";
 export {
+  decodeApiKey,
   decodeCanceledScheduledEmail,
   decodeEmail,
   decodeScheduledEmail,
@@ -63,6 +64,11 @@ export {
   decodeScheduledEmailPage,
 } from "./responses.js";
 export type {
+  ApiKey,
+  ApiKeyDomain,
+  ApiKeyOrganization,
+  ApiKeyPlan,
+  ApiKeyQuota,
   CanceledScheduledEmail,
   Email,
   PageSteps,

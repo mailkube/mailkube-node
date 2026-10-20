@@ -125,7 +125,10 @@ holds in both directions, and `test/events.test.ts` asserts fixtures and registr
   wire is snake_case, so a mapping is unavoidable; a generic snake-to-camel converter is rejected
   because it invents fields no model declares and mangles keys like `from` and `object`. Build
   decoders from the readers in `types/decode.ts`, and **use the defaulting readers**: the API omits
-  fields rather than sending null, so a required reader throws on a legitimate last page.
+  fields rather than sending null, so a required reader throws on a legitimate last page. The one
+  field the API does send as `null` is the calling key's `plan`, where null means "no
+  subscription"; it is read with `optionalNested`, because decoding it as empty would produce a
+  plan built from defaults that looks like a real one.
 - **`EVENT_DECODERS` is `satisfies`-checked, never annotated.** An explicit
   `Record<string, Decoder<...>>` widens every value and collapses the derived union, which silently
   breaks `switch (event.type)` narrowing for every caller.
@@ -200,7 +203,8 @@ try/catch in `readEnv` fails the Deno job while Node stays green.
 
 ## What this SDK still leaves for you
 
-Every resource the public API exposes (`emails`, `scheduled-emails` and its batches) is wrapped, and
+Every resource the public API exposes (`emails`, `scheduled-emails` and its batches, and the
+calling key's own description, `api-keys/me`, as `credential.info()`) is wrapped, and
 the webhook catalogue covers all eleven event types. When the API grows, follow the checklists in
 `SDK_CONTRACT.md` — and note that adding a webhook event here is one entry in `EVENT_DECODERS` plus
 one fixture in `test/events.test.ts`, which the catalogue guard requires.
