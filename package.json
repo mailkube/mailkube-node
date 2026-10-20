@@ -52,6 +52,7 @@
   "scripts": {
     "build": "node scripts/generate-version.mjs && tsup",
     "typecheck": "tsc --noEmit",
+    "typecheck:examples": "npm run build && tsc -p tsconfig.examples.json",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

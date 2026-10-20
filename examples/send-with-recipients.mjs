@@ -11,7 +11,7 @@
 // match [A-Za-z0-9-] up to 64 characters, and no value may contain CR or LF — the SDK forwards
 // them and the server rejects the message if they break those rules.
 
-import { Mailkube, MailkubeError } from "../dist/index.js";
+import { Mailkube, ApiError, MailkubeError } from "../dist/index.js";
 
 const recipient = process.argv[2];
 if (!recipient) {
@@ -45,7 +45,8 @@ try {
   console.log(`accepted ${email.id} (message-id ${email.messageId ?? "none"})`);
 } catch (error) {
   if (error instanceof MailkubeError) {
-    console.error(`${error.errorName ?? error.name}: ${error.message}`);
+    const name = error instanceof ApiError ? error.errorName : error.name;
+    console.error(`${name}: ${error.message}`);
     process.exit(1);
   }
   throw error;

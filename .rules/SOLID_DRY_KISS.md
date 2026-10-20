@@ -10,6 +10,7 @@ thresholds and how to satisfy each gate locally *before* pushing.
 | **Coverage** | ≥ 90% **line and branch** | vitest v8 `coverage.thresholds` (the `test` CI job) |
 | **DRY** | ≤ 1% duplicated code | `jscpd` (the `dry` CI job) — `src/` at `minTokens: 50`, `examples/` at 100 |
 | **Examples parse** | every `examples/*.mjs` is valid JavaScript | `node --check` (the `examples` CI job) |
+| **Examples type-check** | every example but the express one checks against the built `.d.ts` | `tsc -p tsconfig.examples.json` (the `examples` CI job) |
 | **KISS** | cyclomatic ≤ 10 + cognitive complexity | eslint `complexity` + `sonarjs` (the `test` CI job) |
 | **Documentation** | every exported symbol has JSDoc | eslint `jsdoc/require-jsdoc` (publicOnly) |
 | **SOLID** | see below — approximated by lint + review | `@typescript-eslint` type-checked + `sonarjs` + PR checklist |
@@ -29,6 +30,7 @@ npm test                # vitest + 90% line+branch coverage gate
 npx --yes jscpd@4 --config .jscpd.json .   # duplication (DRY) gate
 npx --yes jscpd@4 --config .jscpd.examples.json examples/  # the same gate over examples/
 for f in examples/*.mjs; do node --check "$f" || exit 1; done  # every example parses
+npm run typecheck:examples   # build, then tsc --checkJs over examples/ against dist/*.d.ts
 ./scripts/check-rule-index.sh              # every .rules/*.md indexed in AGENTS.md
 ```
 

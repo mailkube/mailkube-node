@@ -13,7 +13,7 @@
 // nothing but it does not silently fall back to sending untopiced either. The second half of this
 // example shows that rejection on purpose.
 
-import { Mailkube, MailkubeError } from "../dist/index.js";
+import { Mailkube, ApiError, MailkubeError } from "../dist/index.js";
 
 const [recipient, topic = "newsletter"] = process.argv.slice(2);
 if (!recipient) {
@@ -39,7 +39,8 @@ try {
   console.log(`accepted ${email.id} under topic ${topic}`);
 } catch (error) {
   if (error instanceof MailkubeError) {
-    console.error(`${error.errorName ?? error.name}: ${error.message}`);
+    const name = error instanceof ApiError ? error.errorName : error.name;
+    console.error(`${name}: ${error.message}`);
     process.exit(1);
   }
   throw error;
@@ -57,7 +58,7 @@ try {
   console.error("expected an unknown topic to be rejected, but it was accepted");
   process.exit(1);
 } catch (error) {
-  if (error instanceof MailkubeError && error.errorName === "topic_not_found") {
+  if (error instanceof ApiError && error.errorName === "topic_not_found") {
     console.log(`unknown topic correctly rejected: ${error.errorName}`);
   } else {
     throw error;
