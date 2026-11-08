@@ -4,13 +4,14 @@
 //   export MAILKUBE_API_KEY=mk_...
 //   node examples/error-handling.mjs you@example.com
 //
-// Every failure arrives as a MailkubeError subclass carrying `errorName` — the server's stable
-// machine-readable name — alongside `statusCode` and `requestId`. Branch on `errorName`, not on
-// the human-readable message, which is free to change.
+// Every refusal from the API arrives as an ApiError subclass carrying `errorName`, the server's
+// stable machine-readable name, alongside `statusCode` and `requestId`. Branch on `errorName`, not
+// on the human-readable message, which is free to change. A transport failure is a ConnectionError
+// instead: no response produced it, so it has no `errorName`.
 //
 // Nothing here sends a message: each call is designed to be refused.
 
-import { Mailkube, MailkubeError, AuthenticationError } from "../dist/index.js";
+import { Mailkube, ApiError, AuthenticationError } from "../dist/index.js";
 
 const recipient = process.argv[2];
 if (!recipient) {
@@ -31,10 +32,9 @@ async function expect(label, expectedName, run) {
     console.error(`${label}: expected ${expectedName}, but the call succeeded`);
     failures += 1;
   } catch (error) {
-    if (error instanceof MailkubeError) {
-      const actual = error.errorName ?? error.name;
-      const ok = actual === expectedName;
-      console.log(`${ok ? "ok  " : "BAD "} ${label}: ${actual} (${error.statusCode})`);
+    if (error instanceof ApiError) {
+      const ok = error.errorName === expectedName;
+      console.log(`${ok ? "ok  " : "BAD "} ${label}: ${error.errorName} (${error.statusCode})`);
       if (!ok) failures += 1;
       return;
     }

@@ -52,6 +52,7 @@
   "scripts": {
     "build": "node scripts/generate-version.mjs && tsup",
     "typecheck": "tsc --noEmit",
+    "typecheck:examples": "npm run build && tsc -p tsconfig.examples.json",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -69,7 +70,7 @@
     "eslint-plugin-sonarjs": "^4.2.0",
     "globals": "^17.11.0",
     "prettier": "^3.3.0",
-    "tsup": "^8.3.0",
+    "tsup": "^9.0.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.68.0",
     "vitest": "^5.0.1"

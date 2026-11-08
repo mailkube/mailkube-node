@@ -18,7 +18,8 @@ const client = new Mailkube();
  * Send one email per invocation.
  * @param {{ to: string, subject: string, html: string, requestId?: string }} event - the
  *   invocation payload; `requestId`, when present, becomes the idempotency key.
- * @returns {Promise<{ statusCode: number, body: string }>} an API Gateway proxy response.
+ * @returns {Promise<{ statusCode: number, headers?: Record<string, string>, body: string }>} an
+ *   API Gateway proxy response.
  */
 export const handler = async (event) => {
   try {

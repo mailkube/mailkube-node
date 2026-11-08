@@ -13,7 +13,7 @@
 // error rather than a silent replay, which is what stops a recycled key from swallowing a real
 // second message.
 
-import { Mailkube, MailkubeError } from "../dist/index.js";
+import { Mailkube, ApiError } from "../dist/index.js";
 
 const recipient = process.argv[2];
 if (!recipient) {
@@ -61,10 +61,8 @@ try {
   console.error("expected a reused key with a changed body to be rejected");
   process.exit(1);
 } catch (error) {
-  if (error instanceof MailkubeError) {
-    console.log(
-      `key reuse with a changed body correctly rejected: ${error.errorName ?? error.name}`,
-    );
+  if (error instanceof ApiError) {
+    console.log(`key reuse with a changed body correctly rejected: ${error.errorName}`);
   } else {
     throw error;
   }

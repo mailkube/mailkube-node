@@ -194,15 +194,24 @@ jobs:
 
   examples:
     # `examples/` is runnable documentation, and customers copy it. Nothing in CI executes it —
-    # that would need live credentials — so this is the floor: every example must at least parse.
-    # ESLint (in `test`) covers style, complexity and SOLID smells; this catches what a linter
-    # cannot, a file that is not valid JavaScript at all.
+    # that would need live credentials — so every example must parse and type-check against the
+    # built package. ESLint (in `test`) covers style, complexity and SOLID smells but runs without
+    # type information on `.mjs`, so a renamed export or member reaches only the type check.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
+          cache: npm
+      - run: npm install
+      - name: Examples type-check against the built package (tsc, checkJs)
+        # The examples import `../dist/index.js`, so the build runs first and its `.d.ts` is what
+        # they are checked against. `noImplicitAny` is off for them alone: the aim is a renamed SDK
+        # export or member, and a framework handler's parameters have no type to give in plain
+        # JavaScript. `webhook-receiver-express.mjs` is excluded because express is not a
+        # dependency of this package; its SDK calls are the same `verify` the worker example checks.
+        run: npm run typecheck:examples
       - name: Examples parse (node --check)
         # One file per invocation, deliberately: `node --check a.mjs b.mjs` checks only the FIRST
         # argument and exits 0, so the glob form would be a green no-op. `|| exit 1` is the other
